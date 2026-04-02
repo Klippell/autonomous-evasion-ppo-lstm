@@ -1,8 +1,6 @@
-==========================================================================
 UNIVERSITY OF PORTO - FACULTY OF SCIENCES (FCUP)
 CC3046 - Introduction to Intelligent Robotics | Academic Year 2025/2026
 PROJECT: Vision-Based Autonomous Pursuit-Evasion in Urban Environments
-==========================================================================
 
 GROUP: T3-G9
 STUDENTS:
@@ -71,4 +69,3 @@ requirements.txt                 -> List of Python dependencies.
 1. Open Webots with the "my_city_traffic.wbt" world.
 2. Set the vehicle controller to <extern> mode.
 3. Execute evader_controller.py from your IDE (e.g., PyCharm).
-==========================================================================
