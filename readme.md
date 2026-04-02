@@ -48,11 +48,15 @@ Quick Installation:
 --------------------------------------------------------------------------
 4. DIRECTORY STRUCTURE
 --------------------------------------------------------------------------
-/controllers/evader_controller/  -> Source code for the autonomous evader.
-/worlds/                         -> .wbt files (e.g., "City Traffic" scene).
-/models/                         -> (Future) Trained PPO+LSTM models.
-README.txt                       -> Project documentation.
-requirements.txt                 -> List of Python dependencies.
+```text
+.
+├── controllers/
+│   └── evader_controller/      # Source code for the autonomous evader
+├── worlds/                     # .wbt files (e.g., "City Traffic" scene)
+├── models/                     # (Future) Trained PPO+LSTM models
+├── README.md                   # Project documentation
+└── requirements.txt            # List of Python dependencies
+
 
 --------------------------------------------------------------------------
 5. DEVELOPMENT MILESTONES
