@@ -57,7 +57,7 @@ Quick Installation:
 ├── README.md                   # Project documentation
 └── requirements.txt            # List of Python dependencies
 
-
+```
 --------------------------------------------------------------------------
 5. DEVELOPMENT MILESTONES
 --------------------------------------------------------------------------
