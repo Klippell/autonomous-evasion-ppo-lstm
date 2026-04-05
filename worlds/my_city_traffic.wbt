@@ -809,6 +809,7 @@ DEF WEBOTS_VEHICLE0 BmwX5 {
   controller "<extern>"
   sensorsSlotTop [
     Camera {
+      name "evader_camera"
       translation 0.72 0 -0.05
       children [
         Pose {
@@ -832,11 +833,22 @@ DEF WEBOTS_VEHICLE0 BmwX5 {
       fieldOfView 1
       width 128
     }
+    Lidar {
+      name "evader_lidar"
+      translation 0.72 0 0.15
+      fieldOfView 3.14159
+      horizontalResolution 180
+      numberOfLayers 1
+      minRange 0.3
+      maxRange 40
+    }
   ]
   sensorsSlotCenter [
     GPS {
+      name "evader_gps"
     }
     Gyro {
+      name "evader_gyro"
     }
     Display {
       width 200
