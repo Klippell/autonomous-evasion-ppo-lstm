@@ -73,3 +73,19 @@ Quick Installation:
 1. Open Webots with the "my_city_traffic.wbt" world.
 2. Set the vehicle controller to <extern> mode.
 3. Execute evader_controller.py from your IDE (e.g., PyCharm).
+
+Training the PPO+LSTM evader:
+1. Open Webots with "worlds/my_city_traffic.wbt".
+2. Keep the Evader vehicle in <extern> controller mode. The Pursuer is moved by
+   the Gym environment during training.
+3. Start training from the project root:
+   .venv\Scripts\python.exe controllers\training.py --timesteps 1000000
+
+If Webots reports more than one `<extern>` robot, pass the robot name shown in
+the Webots console, for example:
+   .venv\Scripts\python.exe controllers\training.py --robot-name vehicle
+
+After reloading the saved world, the intended extern robot name is "evader".
+
+Run a trained policy:
+   .venv\Scripts\python.exe controllers\inference.py --model logs\evader_recurrent_ppo.zip
