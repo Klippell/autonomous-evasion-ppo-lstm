@@ -44,11 +44,13 @@ def run_evader():
     print("=====================================================")
 
     # --- CONFIGURAÇÕES DE MOVIMENTO (Ação Inicial) ---
-    # Para o carro se mover no Webots, precisamos de 4 comandos:
+    # Keep this standalone controller stopped by default. The RL environment in
+    # controllers/training.py and controllers/inference.py is responsible for
+    # commanding throttle/brake during learning and evaluation.
     driver.setGear(1)  # 1. Engata a primeira marcha
-    driver.setCruisingSpeed(40.0)  # 2. Define velocidade alvo (km/h)
-    driver.setThrottle(0.8)  # 3. Aplica 80% de aceleração
-    driver.setBrakeIntensity(0.0)  # 4. Garante que o freio está solto
+    driver.setCruisingSpeed(0.0)  # 2. Define velocidade alvo (km/h)
+    driver.setThrottle(0.0)  # 3. Sem aceleração automática
+    driver.setBrakeIntensity(1.0)  # 4. Mantém o carro parado
     driver.setSteeringAngle(0.0)  # Rodas retas
 
     # --- LOOP PRINCIPAL (Sense-Think-Act) ---
@@ -61,8 +63,10 @@ def run_evader():
         if current_speed > 0.1:
             print(f"MOVIMENTO DETECTADO: {current_speed:.2f} km/h")
 
-        # ACT (Agir): Mantém os comandos de aceleração ativos
-        driver.setThrottle(0.8)
+        # ACT (Agir): mantém o carro parado; use training.py/inference.py for RL.
+        driver.setCruisingSpeed(0.0)
+        driver.setThrottle(0.0)
+        driver.setBrakeIntensity(1.0)
         driver.setSteeringAngle(0.0)
 
 

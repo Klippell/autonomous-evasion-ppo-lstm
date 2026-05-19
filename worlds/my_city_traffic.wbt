@@ -7,7 +7,6 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/road/protos/StraightRoadSegment.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/road/protos/RoadIntersection.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/vehicles/protos/bmw/BmwX5.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/GenericTrafficLight.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/CrossRoadsTrafficLight.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/BuildingUnderConstruction.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/CommercialBuilding.proto"
@@ -24,13 +23,8 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/SimpleBuilding.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/trees/protos/Forest.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/trees/protos/SimpleTree.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/PedestrianCrossing.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/CautionSign.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/CautionPanel.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/OrderSign.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/OrderPanel.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/StopSign.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/YieldSign.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/SpeedLimitSign.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/SpeedLimitPanel.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/TrafficCone.proto"
@@ -121,10 +115,11 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation -0.19884042049686187 0.1891995425947396 0.96159555960839 1.657752561043425
-  position -47.12421008954344 -9.254277030216358 23.911145154206356
+  orientation 0.40624335001304135 0.01578316653924695 -0.913628607380579 2.977172748555746
+  position 309.53781692052746 112.65643484052416 367.6641071146475
   near 1
-  follow "vehicle"
+  follow "evader"
+  followType "None"
   lensFlare LensFlare {
   }
 }
@@ -402,6 +397,94 @@ RoadIntersection {
     }
   ]
   startRoadBorder FALSE
+}
+DEF Pursuer BmwX5 {
+  hidden position_0_0 1.4730885529616148e-05
+  hidden position2_0_0 0.0010012077900416225
+  hidden position_0_1 1.558983042919482e-05
+  hidden position2_0_1 0.001080626969377379
+  hidden position_0_2 2172.133059460687
+  hidden position_0_3 2354.5029626587166
+  hidden linearVelocity_0 0.0009114290971950472 -1.10094562424189e-05 -0.014401554844090463
+  hidden angularVelocity_0 2.5282910539437454e-05 0.0027148839524149056 -3.1980513952180146e-07
+  hidden rotation_1 -7.367284331445088e-06 -0.9999742250154598 -0.007179780668926282 0.0019848606523595607
+  hidden rotation_2 7.804618824828164e-06 0.9999728602331993 -0.0073674104081709905 0.0020604679227000096
+  hidden rotation_3 0 -1 0 5.174485412419601
+  hidden rotation_4 1.1659120363613405e-25 -1 2.667864150836999e-25 5.459045634635693
+  translation -22.978860437995618 45.87849373987864 0.31912698337952783
+  rotation 0.0017697539926309772 -7.66515144527812e-07 0.9999984339838828 3.1412479223674445
+  name "pursuer"
+  recognitionColors [
+    1 0 0
+  ]
+  controller ""
+  sensorsSlotTop [
+    Lidar {
+      translation 0 0 0.35
+      horizontalResolution 128
+      fieldOfView 6.283185
+      verticalFieldOfView 0.05
+      numberOfLayers 1
+      near 0.05
+      minRange 0.05
+      maxRange 25
+    }
+    Camera {
+      translation 0.72 0 -0.05
+      children [
+        Pose {
+          translation -0.05 0 0
+          rotation 0 -1 0 1.5708
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.8 0.8 0.8
+                roughness 1
+                metalness 0
+              }
+              geometry Cylinder {
+                height 0.1
+                radius 0.04
+              }
+            }
+          ]
+        }
+      ]
+      fieldOfView 1
+      width 128
+    }
+  ]
+  sensorsSlotCenter [
+    TouchSensor {
+      translation 0.85 0 0.85
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 1 0 0
+            transparency 0.9
+            roughness 1
+            metalness 0
+          }
+          geometry DEF PURSUER_TOUCH_BODY Box {
+            size 4.9 2.2 0.45
+          }
+        }
+      ]
+      boundingObject USE PURSUER_TOUCH_BODY
+      lookupTable [
+        0 0 0
+        0.01 1 0
+      ]
+    }
+    GPS {
+    }
+    Gyro {
+    }
+    Display {
+      width 200
+      height 150
+    }
+  ]
 }
 RoadIntersection {
   translation 105 93 0.02
@@ -803,13 +886,84 @@ StraightRoadSegment {
   leftBorder FALSE
   length 69
 }
-DEF WEBOTS_VEHICLE0 BmwX5 {
-  translation -45 45.88 0.4
-  rotation 0 0 1 3.14159
+DEF Evader BmwX5 {
+  hidden position_0_0 0.015600542466950446
+  hidden position2_0_0 1766242.7673908884
+  hidden position_0_1 0.12084885872666398
+  hidden position2_0_1 1741957.0456364022
+  hidden position_0_2 1475058.1591003938
+  hidden position_0_3 1682394.116353121
+  hidden position_0_8 -5.34700011920929
+  hidden position_0_9 0.052861511020073665
+  hidden position_0_10 0.13554573415258553
+  hidden linearVelocity_0 -1.3730265678269535 -0.08012170467955926 -0.009806353870743816
+  hidden angularVelocity_0 0.01867346237135355 0.0008674148129192002 -0.01661582526703799
+  hidden rotation_1 -0.0078000008846639745 -0.9999450603114338 -0.007002595587498139 1.6784854866724694
+  hidden rotation_2 -0.05853748469851243 -0.9675925063735129 0.24563815765266345 5.800218705303722
+  hidden rotation_3 0 -0.9999999999999999 0 5.01001629968418
+  hidden rotation_4 0 -0.9999999999999999 0 4.14786789954658
+  hidden rotation_28 0 0.3205961743168832 -0.9472159695726095 5.34700011920929
+  hidden translation_29 -0.016206079733444678 0.10546663991011074 -0.018190497659987925
+  hidden rotation_29 0.7466598432279096 0 -0.6652060421485012 0.052861511020075386
+  hidden translation_30 -0.018362564659437197 0.27111734284055344 -0.020611041964675114
+  hidden rotation_30 0.7466598432279096 0 -0.6652060421485011 0.13554573415258628
+  translation -45.739183375503785 46.25329706116704 0.31446542715249115
+  rotation 0.0031230066815514114 -0.001002445983362169 0.9999946209511916 -3.0740201224125405
+  color 0 0 1
+  name "evader"
   controller "<extern>"
+  supervisor TRUE
   sensorsSlotTop [
+    Lidar {
+      translation 2.8 0 -0.5
+      name "front lidar"
+      horizontalResolution 48
+      fieldOfView 2.8
+      verticalFieldOfView 1.5
+      numberOfLayers 1
+      near 0.05
+      minRange 0.05
+      maxRange 25
+    }
+    Lidar {
+      translation 0 1.35 -0.5
+      rotation 0 0 1 1.5708
+      name "left lidar"
+      horizontalResolution 48
+      fieldOfView 1.6
+      verticalFieldOfView 0.05
+      numberOfLayers 1
+      near 0.05
+      minRange 0.05
+      maxRange 25
+    }
+    Lidar {
+      translation 0 -1.35 -0.5
+      rotation 0 0 1 -1.5708
+      name "right lidar"
+      horizontalResolution 48
+      fieldOfView 1.6
+      verticalFieldOfView 0.05
+      numberOfLayers 1
+      near 0.05
+      minRange 0.05
+      maxRange 25
+    }
+    Lidar {
+      translation -2.8 0 -0.5
+      rotation 0 0 1 3.14159
+      name "back lidar"
+      horizontalResolution 48
+      fieldOfView 2.8
+      verticalFieldOfView 0.05
+      numberOfLayers 1
+      near 0.05
+      minRange 0.05
+      maxRange 25
+    }
     Camera {
-      translation 0.72 0 -0.05
+      translation 2.8 0 -0.05
+      name "front camera"
       children [
         Pose {
           translation -0.05 0 0
@@ -831,9 +985,60 @@ DEF WEBOTS_VEHICLE0 BmwX5 {
       ]
       fieldOfView 1
       width 128
+      recognition Recognition {
+      }
+    }
+    Camera {
+      translation -1.45 -1.59423e-05 -0.05
+      rotation 0 0 1 -3.1415853071795863
+      name "back camera"
+      children [
+        Pose {
+          translation -0.05 0 0
+          rotation 0 -1 0 1.5708
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.8 0.8 0.8
+                roughness 1
+                metalness 0
+              }
+              geometry Cylinder {
+                height 0.1
+                radius 0.04
+              }
+            }
+          ]
+        }
+      ]
+      fieldOfView 1
+      width 128
+      recognition Recognition {
+      }
     }
   ]
   sensorsSlotCenter [
+    TouchSensor {
+      translation 1.28 0 0.85
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0 0.5 1
+            transparency 0.9
+            roughness 1
+            metalness 0
+          }
+          geometry DEF EVADER_TOUCH_BODY Box {
+            size 6 2.5 0.45
+          }
+        }
+      ]
+      boundingObject USE EVADER_TOUCH_BODY
+      lookupTable [
+        0 0 0
+        0.01 1 0
+      ]
+    }
     GPS {
     }
     Gyro {
@@ -843,13 +1048,6 @@ DEF WEBOTS_VEHICLE0 BmwX5 {
       height 150
     }
   ]
-}
-GenericTrafficLight {
-  translation -34.665 55.2732 0
-  startGreen FALSE
-  greenTime 10
-  redTime 10
-  state "red"
 }
 CrossRoadsTrafficLight {
   translation 45 -45 0
@@ -1005,36 +1203,37 @@ BuildingUnderConstruction {
   translation 78.5008 143.08 0
 }
 CommercialBuilding {
-  translation 70.9574 31.6315 0
+  translation 23.6474 78.4215 0
 }
 UBuilding {
-  translation -87.1466 81.9927 0
+  translation -56.4066 129.843 0
 }
 HollowBuilding {
+  translation 23.02 0 0
 }
 Hotel {
-  translation -9.97953 71.6228 0
+  translation -9.97953 115.703 0
 }
 TheThreeTowers {
   translation 68.118 -90.636 0
 }
 CyberboticsTower {
-  translation 27.5187 68.7504 0
+  translation 30.3387 28.8704 0
 }
 BigGlassTower {
-  translation 68.6779 -9.29537 0
+  translation 28.2279 -24.2254 0
   rotation 0 0 1 1.5708
 }
 Auditorium {
-  translation -63.9296 -61.9719 0
+  translation -86.8251 -32.1348 0
   rotation 0 0 1 0.654496
 }
 Museum {
-  translation -0.191182 -68.6571 0
+  translation -57.0012 -58.4271 0
   rotation 0 0 1 1.5708
 }
 ResidentialBuilding {
-  translation -69.274 -1.81329 0
+  translation -94.584 35.1467 0
 }
 FastFoodRestaurant {
   translation 63.46 212.26 0
@@ -1064,7 +1263,7 @@ SimpleBuilding {
   wallType "glass highrise"
 }
 SimpleBuilding {
-  translation 97.8047 -149.501 0
+  translation -15.6653 -65.611 0
   name "building(2)"
   floorHeight 5
   wallType "brick building"
@@ -1124,8 +1323,8 @@ SimpleBuilding {
   ]
 }
 SimpleBuilding {
-  translation -56.5761 182.166 0
-  rotation 0 0 -1 2.618
+  translation -89.9773 88.3324 0
+  rotation 0 0 -1 0.523605
   name "building(9)"
   floorNumber 6
   corners [
@@ -1141,7 +1340,7 @@ SimpleBuilding {
   roofShape "flat roof"
 }
 SimpleBuilding {
-  translation -72.4649 -133.213 0
+  translation 27.3776 -54.6677 0
   rotation 0 0 1 5.23599
   name "building(10)"
   floorNumber 2
@@ -1180,7 +1379,7 @@ SimpleBuilding {
   wallType "tall house"
 }
 SimpleBuilding {
-  translation -3.91795 144.18 0
+  translation -93.3079 -7.3 0
   name "building(13)"
   wallType "residential building"
 }
@@ -1326,20 +1525,6 @@ SimpleTree {
   translation -86.3803 9.02365 0
   name "tree(26)"
 }
-PedestrianCrossing {
-  translation 45 -26 -0.06
-  rotation 0 0 1 -3.1415853071795863
-}
-PedestrianCrossing {
-  translation -61.4608 45.0693 -0.06
-  rotation 0 0 1 -1.5707853071795865
-  name "pedestrian crossing(1)"
-}
-PedestrianCrossing {
-  translation 26.9799 -45.1201 -0.06
-  rotation 0 0 1 -1.5707853071795865
-  name "pedestrian crossing(2)"
-}
 CautionSign {
   translation -91.9275 48.9391 0
   signBoards [
@@ -1407,26 +1592,6 @@ CautionSign {
     }
   ]
 }
-OrderSign {
-  translation -67.6589 34.4983 0
-  rotation 0 0 1 3.14159
-  signBoards [
-    OrderPanel {
-      translation 0.026 0 -0.175
-      signImage [
-        "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/textures/signs/no_right_turn.jpg"
-      ]
-    }
-  ]
-}
-StopSign {
-  translation -34.6012 34.2884 0
-  rotation 0 0 1 -1.5708
-}
-YieldSign {
-  translation -55.468 66.4958 0
-  rotation 0 0 1 1.5708
-}
 SpeedLimitSign {
   translation -113.192 20.4404 0
   rotation 0 0 1 0.9163
@@ -1491,14 +1656,20 @@ SpeedLimitSign {
   ]
 }
 TrafficCone {
-  translation 33.9741 -53.7608 0
+  hidden linearVelocity_0 -1.508111504696422e-08 1.758882389154595e-11 -2.3467599987727525e-08
+  hidden angularVelocity_0 -1.0630162181599966e-10 -9.122156999046046e-08 -8.563454199111948e-14
+  translation 33.97405104259075 -53.760800093570644 -0.004076717758078219
+  rotation -0.0002733577629864285 0.9999998350510276 0.0005051469599632857 0.013690796598597683
   physics Physics {
     density -1
     mass 1
   }
 }
 TrafficCone {
-  translation 33.9697 -51.435 0
+  hidden linearVelocity_0 -1.508111504518416e-08 1.7588829040585465e-11 -2.346759996996484e-08
+  hidden angularVelocity_0 -1.0630165383517935e-10 -9.122156998034934e-08 -8.563450643959469e-14
+  translation 33.969651042590755 -51.43500009357068 -0.004076717758078219
+  rotation -0.0002733577629864447 0.9999998350510276 0.0005051469599637469 0.013690796598597683
   name "traffic cone(1)"
   physics Physics {
     density -1
@@ -1506,7 +1677,10 @@ TrafficCone {
   }
 }
 TrafficCone {
-  translation 33.9536 -48.9544 0
+  hidden linearVelocity_0 6.616211468985503e-10 1.310822033835658e-09 -8.490166170102795e-09
+  hidden angularVelocity_0 -8.000671276455195e-09 4.0382395780797475e-09 2.3156595321368036e-16
+  translation 43.97285473964792 -55.91088946742804 0.23724687738438877
+  rotation 0.15867421393902345 0.8289982384884134 0.5362689758077943 2.9370204197403216
   name "traffic cone(2)"
   physics Physics {
     density -1
@@ -1514,7 +1688,10 @@ TrafficCone {
   }
 }
 TrafficCone {
-  translation 33.7172 -45.7234 0
+  hidden linearVelocity_0 3.825973245252083e-15 1.107560580210198e-15 -2.5366373958468764e-14
+  hidden angularVelocity_0 -6.5609765597457984e-15 2.2498358834871894e-14 4.763745233073475e-17
+  translation 56.43897438689355 -27.79192086848234 0.234987930837194
+  rotation 0.17612533069195413 -0.9781294371452037 -0.110646608979475 -2.0395950079401715
   name "traffic cone(3)"
   physics Physics {
     density -1

@@ -73,3 +73,42 @@ Quick Installation:
 1. Open Webots with the "my_city_traffic.wbt" world.
 2. Set the vehicle controller to <extern> mode.
 3. Execute evader_controller.py from your IDE (e.g., PyCharm).
+
+Training the PPO+LSTM evader:
+1. Open Webots with "worlds/my_city_traffic.wbt".
+2. Keep the Evader vehicle in <extern> controller mode. The Pursuer is moved by
+   the Gym environment during training.
+3. Start training from the project root:
+   .venv\Scripts\python.exe controllers\training.py --timesteps 1000000
+
+Training, PPO hyperparameters, environment constants, and reward weights are
+centralized in:
+   configs\default_experiment.json
+
+The policy is recurrent by default through sb3-contrib RecurrentPPO and
+MultiInputLstmPolicy. LSTM settings are in the `model.policy_kwargs` section.
+
+The evader also exposes compact camera-recognition features from its front and
+back cameras. These drive the configurable line-of-sight reward and a visual
+moving-away reward based on the pursuer's apparent image size.
+
+The policy observation includes onboard ego dynamics: current speed, estimated
+acceleration, current steering angle, yaw rate from the gyro when available, and
+touch contact. Camera-frame pursuer bearing is exposed through the vision
+features, without adding new GPS-derived pursuer bearing.
+
+To run an alternate experiment, copy that file, change only the values being
+tested, and pass it with:
+   .venv\Scripts\python.exe controllers\training.py --config configs\my_experiment.json
+
+If Webots reports more than one `<extern>` robot, pass the robot name shown in
+the Webots console, for example:
+   .venv\Scripts\python.exe controllers\training.py --robot-name vehicle
+
+After reloading the saved world, the intended extern robot name is "evader".
+
+Run a trained policy:
+   .venv\Scripts\python.exe controllers\inference.py --model logs\evader_recurrent_ppo.zip
+
+Inference also accepts `--config`, so evaluation can use the same environment
+and reward settings as training.
