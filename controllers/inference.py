@@ -16,6 +16,12 @@ import controllers.evader_env
 from controllers.experiment_config import DEFAULT_CONFIG_PATH, env_kwargs_from_config, load_experiment_config
 
 
+def _space_summary(space: gym.Space) -> str:
+    if isinstance(space, gym.spaces.Dict):
+        return "Dict(" + ", ".join(f"{key}:{value.shape}" for key, value in space.spaces.items()) + ")"
+    return f"{type(space).__name__}{getattr(space, 'shape', '')}"
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run a trained evader policy.")
     parser.add_argument("--config", default=DEFAULT_CONFIG_PATH, help="Path to a JSON experiment config.")
@@ -48,6 +54,13 @@ def main() -> None:
         "Evader-v0",
         **env_kwargs,
     )
+    if model.observation_space != env.observation_space:
+        raise RuntimeError(
+            "This checkpoint was trained with a different observation space than the current environment.\n"
+            f"Model expects: {_space_summary(model.observation_space)}\n"
+            f"Current env returns: {_space_summary(env.observation_space)}\n"
+            "Use a checkpoint trained after the latest observation changes, or retrain with the current code/config."
+        )
 
     obs, _info = env.reset()
     lstm_states = None

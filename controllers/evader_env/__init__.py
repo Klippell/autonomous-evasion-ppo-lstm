@@ -22,12 +22,12 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         max_episode_steps: int = 2500,
         capture_distance: float = 6.0,
         vehicle_touch_distance: float = 5.5,
-        pursuer_speed_mps: float = 4.0,
+        pursuer_speed_mps: float = 6.0,
         robot_name: str | None = None,
         still_distance_threshold: float = 0.1,
         self_lidar_ignore_distance: float = 0.06,
         action_repeat: int = 4,
-        pursuer_start_delay_steps: int = 35,
+        pursuer_start_delay_steps: int = 65,
         show_reward_display: bool = True,
         reward_display_interval: int = 1,
         show_car_display: bool = False,
@@ -96,6 +96,7 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.last_reward_log_step = 0
         self.label_debug_reported = False
         self.directional_lidar_ranges: dict[str, np.ndarray] = {}
+        self.recognition_enabled_cameras: set[int] = set()
         self.previous_pursuer_visible = True
         self.previous_pursuer_visual_size = 0.0
 
@@ -420,10 +421,21 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
             camera.enable(self.timestep)
         except Exception:
             return
+        for method_name in ("recognitionEnable", "enableRecognition", "recognition_enable"):
+            method = getattr(camera, method_name, None)
+            if method is None:
+                continue
+            try:
+                method(self.timestep)
+                self.recognition_enabled_cameras.add(id(camera))
+                return
+            except Exception:
+                continue
         recognition = self._camera_recognition(camera)
         if recognition is not None:
             try:
                 recognition.enable(self.timestep)
+                self.recognition_enabled_cameras.add(id(camera))
             except Exception:
                 pass
 
@@ -475,6 +487,9 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         return {"visible": best_size > 0.0, "x": best_x, "bearing": best_bearing, "size": best_size}
 
     def _recognized_objects(self, camera: Any) -> list[Any]:
+        if id(camera) not in self.recognition_enabled_cameras:
+            return []
+
         recognition = self._camera_recognition(camera)
         if recognition is not None:
             for method_name in ("getObjects", "get_objects"):
