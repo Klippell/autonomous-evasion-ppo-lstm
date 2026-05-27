@@ -21,7 +21,6 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/ResidentialBuilding.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/FastFoodRestaurant.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/SimpleBuilding.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/trees/protos/Forest.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/trees/protos/SimpleTree.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/CautionSign.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/CautionPanel.proto"
@@ -31,7 +30,6 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/advertising_board/protos/AdvertisingBoard.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/HighwayPole.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/HighwaySign.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/road/protos/Crossroad.proto"
 IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/vehicles/protos/bmw/BmwX5Simple.proto"
 IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/vehicles/protos/citroen/CitroenCZeroSimple.proto"
 IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/vehicles/protos/toyota/ToyotaPriusSimple.proto"
@@ -115,8 +113,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 0.40624335001304135 0.01578316653924695 -0.913628607380579 2.977172748555746
-  position 309.53781692052746 112.65643484052416 367.6641071146475
+  orientation -0.09542261942183347 0.9124550980344657 0.39789473202543146 0.8121147185877325
+  position -222.54646907436174 -44.2279699800298 232.0137480781619
   near 1
   follow "evader"
   followType "None"
@@ -399,24 +397,29 @@ RoadIntersection {
   startRoadBorder FALSE
 }
 DEF Pursuer BmwX5 {
-  hidden position_0_0 1.4730885529616148e-05
-  hidden position2_0_0 0.0010012077900416225
-  hidden position_0_1 1.558983042919482e-05
-  hidden position2_0_1 0.001080626969377379
-  hidden position_0_2 2172.133059460687
-  hidden position_0_3 2354.5029626587166
-  hidden linearVelocity_0 0.0009114290971950472 -1.10094562424189e-05 -0.014401554844090463
-  hidden angularVelocity_0 2.5282910539437454e-05 0.0027148839524149056 -3.1980513952180146e-07
-  hidden rotation_1 -7.367284331445088e-06 -0.9999742250154598 -0.007179780668926282 0.0019848606523595607
-  hidden rotation_2 7.804618824828164e-06 0.9999728602331993 -0.0073674104081709905 0.0020604679227000096
-  hidden rotation_3 0 -1 0 5.174485412419601
-  hidden rotation_4 1.1659120363613405e-25 -1 2.667864150836999e-25 5.459045634635693
-  translation -22.978860437995618 45.87849373987864 0.31912698337952783
-  rotation 0.0017697539926309772 -7.66515144527812e-07 0.9999984339838828 3.1412479223674445
+  hidden position_0_0 1.5627958006132432e-05
+  hidden position2_0_0 0.0014019345495604584
+  hidden position_0_1 1.6489727933719152e-05
+  hidden position2_0_1 0.001484173901929468
+  hidden position_0_2 -3138.5719205967334
+  hidden position_0_3 -3223.356382871435
+  hidden linearVelocity_0 0.02368361700767936 0.00010137179177305285 0.08243011621639704
+  hidden angularVelocity_0 -0.00032481713882541045 0.056905632849857966 -2.268562469271376e-05
+  hidden rotation_1 -7.855828071866062e-06 -0.9999798393762298 -0.006349864516308224 0.002385535719040113
+  hidden linearVelocity_1 0.018912604332249505 0.0001069147344050648 0.9139254570857284
+  hidden angularVelocity_1 -0.00040476241325641685 0.05879541061044813 -1.2178767537013362e-05
+  hidden rotation_2 8.286517771978717e-06 0.9999787046229935 -0.00652611920311795 0.0024639596120157223
+  hidden linearVelocity_2 0.01892881416618856 0.0001070840224046356 0.9139224575143202
+  hidden angularVelocity_2 -0.0004051608079246003 0.05882958162706226 -1.2148873640131617e-05
+  hidden rotation_3 0 1 0 2.522095385466791
+  hidden linearVelocity_3 0.025949179376939763 0.00015910532994996464 0.9122155206862512
+  hidden angularVelocity_3 -0.00045523322990179827 0.06933795117901749 -1.9713051544657898e-05
+  hidden rotation_4 1.1660550714101948e-25 -0.9999999999999999 4.3118142993960604e-26 3.849838389340169
+  hidden linearVelocity_4 0.026099992594848534 0.0001608937491447129 0.9123116643500777
+  hidden angularVelocity_4 -0.0004599073242730966 0.06974207615138496 -1.9650047069933756e-05
+  translation -26.965075447868205 45.88887366919695 0.30973060855846835
+  rotation 0.0008316264269365853 -2.011799558594503e-06 0.9999996541966596 -3.129824442972064
   name "pursuer"
-  recognitionColors [
-    1 0 0
-  ]
   controller ""
   sensorsSlotTop [
     Lidar {
@@ -887,28 +890,38 @@ StraightRoadSegment {
   length 69
 }
 DEF Evader BmwX5 {
-  hidden position_0_0 0.015600542466950446
-  hidden position2_0_0 1766242.7673908884
-  hidden position_0_1 0.12084885872666398
-  hidden position2_0_1 1741957.0456364022
-  hidden position_0_2 1475058.1591003938
-  hidden position_0_3 1682394.116353121
-  hidden position_0_8 -5.34700011920929
-  hidden position_0_9 0.052861511020073665
-  hidden position_0_10 0.13554573415258553
-  hidden linearVelocity_0 -1.3730265678269535 -0.08012170467955926 -0.009806353870743816
-  hidden angularVelocity_0 0.01867346237135355 0.0008674148129192002 -0.01661582526703799
-  hidden rotation_1 -0.0078000008846639745 -0.9999450603114338 -0.007002595587498139 1.6784854866724694
-  hidden rotation_2 -0.05853748469851243 -0.9675925063735129 0.24563815765266345 5.800218705303722
-  hidden rotation_3 0 -0.9999999999999999 0 5.01001629968418
-  hidden rotation_4 0 -0.9999999999999999 0 4.14786789954658
+  hidden position_0_0 -0.2659278675157425
+  hidden position2_0_0 2038277.8613548228
+  hidden position_0_1 -0.20569023594504982
+  hidden position2_0_1 2013377.3209904197
+  hidden position_0_2 1730969.1007943335
+  hidden position_0_3 1946480.810214413
+  hidden position_0_8 -3.730720976829531
+  hidden position_0_9 0.23571901132794099
+  hidden position_0_10 0.4281036022774692
+  hidden linearVelocity_0 -3.1423164894470594 -1.4065895721141293 0.0004062039036391503
+  hidden angularVelocity_0 -0.0032571778613324012 0.003742486815457779 0.2147151791044083
+  hidden rotation_1 -0.00930965612207218 0.06960329782437903 0.9975313083983177 0.26657822840622847
+  hidden linearVelocity_1 -2.8406521274150665 -1.7521573773481394 -0.0015659343440619432
+  hidden angularVelocity_1 4.562220678558596 -6.8477736688120086 2.4965242325425674
+  hidden rotation_2 -0.08452377946251326 0.8189553842721686 -0.5675982816015189 5.923445656262069
+  hidden linearVelocity_2 -3.1707187093423763 -1.8373718630537532 -0.0015195401160031316
+  hidden angularVelocity_2 4.828432173177349 -8.21680369438561 2.1084272431276996
+  hidden rotation_3 0 -0.9999999999999999 0 1.8141488148612261
+  hidden linearVelocity_3 -3.0731193377518227 -1.0782875772681382 -0.00010394019424897125
+  hidden angularVelocity_3 2.8648410397489648 -8.222493047590252 0.22275544902991917
+  hidden rotation_4 0 1 0 0.2675326346432719
+  hidden linearVelocity_4 -3.400619699421173 -1.1924017148886068 -0.000160949366543433
+  hidden angularVelocity_4 3.169375966719752 -9.097481680311766 0.22379739199949658
   hidden rotation_28 0 0.3205961743168832 -0.9472159695726095 5.34700011920929
-  hidden translation_29 -0.016206079733444678 0.10546663991011074 -0.018190497659987925
-  hidden rotation_29 0.7466598432279096 0 -0.6652060421485012 0.052861511020075386
-  hidden translation_30 -0.018362564659437197 0.27111734284055344 -0.020611041964675114
-  hidden rotation_30 0.7466598432279096 0 -0.6652060421485011 0.13554573415258628
-  translation -45.739183375503785 46.25329706116704 0.31446542715249115
-  rotation 0.0031230066815514114 -0.001002445983362169 0.9999946209511916 -3.0740201224125405
+  hidden translation_29 -0.09323375588979689 -0.0030219821830278146 -0.054909723599204055
+  hidden rotation_29 0.02488529872962969 -0.3066540880902589 0.9514956606126319 1.583382797925867
+  hidden translation_30 -0.025388855054238935 0.6406767785307698 -0.028497694448635813
+  hidden rotation_30 0.7466598432279097 0 -0.6652060421485012 0.3184032344604472
+  hidden translation_31 -0.008958129190945296 0.586395793961735 -0.010055042969428274
+  hidden rotation_31 0.7466598432279095 5.9507044916779145e-18 -0.6652060421485012 0.2925578681248816
+  translation -49.0589564161713 45.59588030604708 0.3137605102631568
+  rotation 0.003254292060391838 0.00102711578351751 0.9999941772912245 -2.805311793080978
   color 0 0 1
   name "evader"
   controller "<extern>"
@@ -962,8 +975,7 @@ DEF Evader BmwX5 {
       maxRange 25
     }
     Camera {
-      translation 2.8 0 -0.05
-      name "front camera"
+      translation 0.74 0 -0.05
       children [
         Pose {
           translation -0.05 0 0
@@ -983,6 +995,7 @@ DEF Evader BmwX5 {
           ]
         }
       ]
+      name "front camera"
       fieldOfView 1
       width 128
       recognition Recognition {
@@ -991,7 +1004,6 @@ DEF Evader BmwX5 {
     Camera {
       translation -1.45 -1.59423e-05 -0.05
       rotation 0 0 1 -3.1415853071795863
-      name "back camera"
       children [
         Pose {
           translation -0.05 0 0
@@ -1011,6 +1023,7 @@ DEF Evader BmwX5 {
           ]
         }
       ]
+      name "back camera"
       fieldOfView 1
       width 128
       recognition Recognition {
@@ -1199,43 +1212,43 @@ DEF STONES Solid {
   name "solid(2)"
   boundingObject USE STONES_GROUP
 }
-BuildingUnderConstruction {
+DEF RANDOM_BUILDING_0 BuildingUnderConstruction {
   translation 78.5008 143.08 0
 }
-CommercialBuilding {
+DEF RANDOM_BUILDING_1 CommercialBuilding {
   translation 23.6474 78.4215 0
 }
-UBuilding {
-  translation -56.4066 129.843 0
+DEF RANDOM_BUILDING_2 UBuilding {
+  translation -56.4066 207.063 0
 }
-HollowBuilding {
-  translation 23.02 0 0
+DEF RANDOM_BUILDING_3 HollowBuilding {
+  translation 120.18 0 0
 }
-Hotel {
+DEF RANDOM_BUILDING_4 Hotel {
   translation -9.97953 115.703 0
 }
-TheThreeTowers {
+DEF RANDOM_BUILDING_5 TheThreeTowers {
   translation 68.118 -90.636 0
 }
-CyberboticsTower {
-  translation 30.3387 28.8704 0
+DEF RANDOM_BUILDING_6 CyberboticsTower {
+  translation 74.4987 28.8704 0
 }
-BigGlassTower {
+DEF RANDOM_BUILDING_7 BigGlassTower {
   translation 28.2279 -24.2254 0
   rotation 0 0 1 1.5708
 }
-Auditorium {
-  translation -86.8251 -32.1348 0
+DEF RANDOM_BUILDING_8 Auditorium {
+  translation -149 -79.8437 0
   rotation 0 0 1 0.654496
 }
-Museum {
-  translation -57.0012 -58.4271 0
+DEF RANDOM_BUILDING_9 Museum {
+  translation -57.0012 -20.7071 0
   rotation 0 0 1 1.5708
 }
-ResidentialBuilding {
-  translation -94.584 35.1467 0
+DEF RANDOM_BUILDING_10 ResidentialBuilding {
+  translation -149.424 35.1467 0
 }
-FastFoodRestaurant {
+DEF RANDOM_BUILDING_11 FastFoodRestaurant {
   translation 63.46 212.26 0
   height 4.3
   length 13
@@ -1243,7 +1256,7 @@ FastFoodRestaurant {
   brand "subway"
   numberOfSides 2
 }
-FastFoodRestaurant {
+DEF RANDOM_BUILDING_12 FastFoodRestaurant {
   translation 48.60864 48.933131 0
   rotation 0 0 -1 -2.8797953071795863
   name "fast food restaurant(1)"
@@ -1253,16 +1266,16 @@ FastFoodRestaurant {
   brand "subway"
   numberOfSides 2
 }
-SimpleBuilding {
+DEF RANDOM_BUILDING_13 SimpleBuilding {
   translation 46.9364 208.338 0
   wallType "glass highrise"
 }
-SimpleBuilding {
+DEF RANDOM_BUILDING_14 SimpleBuilding {
   translation 66.8317 195.97 0
   name "building(1)"
   wallType "glass highrise"
 }
-SimpleBuilding {
+DEF RANDOM_BUILDING_15 SimpleBuilding {
   translation -15.6653 -65.611 0
   name "building(2)"
   floorHeight 5
@@ -1270,7 +1283,7 @@ SimpleBuilding {
   roofType "gravel"
   roofShape "flat roof"
 }
-SimpleBuilding {
+DEF RANDOM_BUILDING_16 SimpleBuilding {
   translation 117.415 -135.778 0
   name "building(3)"
   floorHeight 5
@@ -1278,7 +1291,7 @@ SimpleBuilding {
   roofType "gravel"
   roofShape "flat roof"
 }
-SimpleBuilding {
+DEF RANDOM_BUILDING_17 SimpleBuilding {
   translation 126.106 -115.963 0
   name "building(4)"
   floorHeight 5
@@ -1286,7 +1299,7 @@ SimpleBuilding {
   roofType "gravel"
   roofShape "flat roof"
 }
-SimpleBuilding {
+DEF RANDOM_BUILDING_18 SimpleBuilding {
   translation 139.996 -95.9459 0
   name "building(5)"
   floorHeight 5
@@ -1294,12 +1307,12 @@ SimpleBuilding {
   roofType "gravel"
   roofShape "flat roof"
 }
-SimpleBuilding {
+DEF RANDOM_BUILDING_19 SimpleBuilding {
   translation 78.2778 175.999 0
   name "building(6)"
   wallType "glass highrise"
 }
-SimpleBuilding {
+DEF RANDOM_BUILDING_20 SimpleBuilding {
   translation 57.9852 259.763 0
   name "building(7)"
   floorNumber 2
@@ -1311,7 +1324,7 @@ SimpleBuilding {
   ]
   wallType "classic building"
 }
-SimpleBuilding {
+DEF RANDOM_BUILDING_21 SimpleBuilding {
   translation -53.2255 258.571 0
   name "building(8)"
   floorNumber 2
@@ -1322,8 +1335,8 @@ SimpleBuilding {
     -5 5
   ]
 }
-SimpleBuilding {
-  translation -89.9773 88.3324 0
+DEF RANDOM_BUILDING_22 SimpleBuilding {
+  translation -101.597 161.703 0
   rotation 0 0 -1 0.523605
   name "building(9)"
   floorNumber 6
@@ -1339,8 +1352,8 @@ SimpleBuilding {
   roofType "gravel"
   roofShape "flat roof"
 }
-SimpleBuilding {
-  translation 27.3776 -54.6677 0
+DEF RANDOM_BUILDING_23 SimpleBuilding {
+  translation 34.8276 -67.5714 0
   rotation 0 0 1 5.23599
   name "building(10)"
   floorNumber 2
@@ -1354,7 +1367,7 @@ SimpleBuilding {
   ]
   wallType "highrise"
 }
-SimpleBuilding {
+DEF RANDOM_BUILDING_24 SimpleBuilding {
   translation -22.0181 258.921 0
   name "building(11)"
   floorNumber 2
@@ -1366,7 +1379,7 @@ SimpleBuilding {
   ]
   wallType "factory building"
 }
-SimpleBuilding {
+DEF RANDOM_BUILDING_25 SimpleBuilding {
   translation 20.4483 259.676 0
   name "building(12)"
   floorNumber 2
@@ -1378,42 +1391,10 @@ SimpleBuilding {
   ]
   wallType "tall house"
 }
-SimpleBuilding {
-  translation -93.3079 -7.3 0
+DEF RANDOM_BUILDING_26 SimpleBuilding {
+  translation -65.7179 100.03 0
   name "building(13)"
   wallType "residential building"
-}
-Forest {
-  rotation 0 0 1 -1.5608
-  shape [
-    -105.8 -117
-    -99 -150.8
-    -69.7 -174
-    -186 -176.3
-    -205.3 -140.5
-    -195 -117
-  ]
-  density 0.3
-}
-Forest {
-  rotation 0 0 1 -1.5608
-  shape [
-    -80 -118
-    -73.7 -141
-    -49 -153
-    64.3 -153
-    12 -117
-  ]
-}
-Forest {
-  rotation 0 0 1 -1.5608
-  shape [
-    -7.6 116.2
-    72.4 116.5
-    174.5 99.2
-    175.8 191.2
-    -56.5 122.9
-  ]
 }
 SimpleTree {
   translation -86.3803 -3.69635 0
@@ -1655,43 +1636,43 @@ SpeedLimitSign {
     }
   ]
 }
-TrafficCone {
-  hidden linearVelocity_0 -1.508111504696422e-08 1.758882389154595e-11 -2.3467599987727525e-08
-  hidden angularVelocity_0 -1.0630162181599966e-10 -9.122156999046046e-08 -8.563454199111948e-14
-  translation 33.97405104259075 -53.760800093570644 -0.004076717758078219
-  rotation -0.0002733577629864285 0.9999998350510276 0.0005051469599632857 0.013690796598597683
+DEF RANDOM_CONE_0 TrafficCone {
+  hidden linearVelocity_0 -1.0489156666141803e-06 1.2306838817147874e-09 -1.6315686037238262e-06
+  hidden angularVelocity_0 -7.437929044172848e-09 -6.344604011830568e-06 -5.949150214711792e-12
+  translation 33.97405220067168 -53.76080010682671 -0.004076655090972742
+  rotation -0.00027336753802657685 0.9999998323674492 0.0005104265498631314 0.013691046616513988
   physics Physics {
     density -1
     mass 1
   }
 }
-TrafficCone {
-  hidden linearVelocity_0 -1.508111504518416e-08 1.7588829040585465e-11 -2.346759996996484e-08
-  hidden angularVelocity_0 -1.0630165383517935e-10 -9.122156998034934e-08 -8.563450643959469e-14
-  translation 33.969651042590755 -51.43500009357068 -0.004076717758078219
-  rotation -0.0002733577629864447 0.9999998350510276 0.0005051469599637469 0.013690796598597683
+DEF RANDOM_CONE_1 TrafficCone {
+  hidden linearVelocity_0 -1.048915666614832e-06 1.2306838811243383e-09 -1.6315686037060622e-06
+  hidden angularVelocity_0 -7.43792904017e-09 -6.344604011834826e-06 -5.949150379784885e-12
+  translation 33.96965220067168 -51.435000106826735 -0.004076655090972742
+  rotation -0.00027336753802655403 0.9999998323674493 0.0005104265498636182 0.013691046616513988
   name "traffic cone(1)"
   physics Physics {
     density -1
     mass 1
   }
 }
-TrafficCone {
-  hidden linearVelocity_0 6.616211468985503e-10 1.310822033835658e-09 -8.490166170102795e-09
-  hidden angularVelocity_0 -8.000671276455195e-09 4.0382395780797475e-09 2.3156595321368036e-16
-  translation 43.97285473964792 -55.91088946742804 0.23724687738438877
-  rotation 0.15867421393902345 0.8289982384884134 0.5362689758077943 2.9370204197403216
+DEF RANDOM_CONE_2 TrafficCone {
+  hidden linearVelocity_0 4.5941440649759565e-08 9.102038525925983e-08 -5.893853641758577e-07
+  hidden angularVelocity_0 -5.555477109684605e-07 2.804060071989516e-07 1.4880427172491203e-14
+  translation 43.97285468561869 -55.91088957347973 0.2372468968701424
+  rotation 0.15867421224614736 0.828998232278034 0.5362689859090859 2.9370204139235545
   name "traffic cone(2)"
   physics Physics {
     density -1
     mass 1
   }
 }
-TrafficCone {
-  hidden linearVelocity_0 3.825973245252083e-15 1.107560580210198e-15 -2.5366373958468764e-14
-  hidden angularVelocity_0 -6.5609765597457984e-15 2.2498358834871894e-14 4.763745233073475e-17
-  translation 56.43897438689355 -27.79192086848234 0.234987930837194
-  rotation 0.17612533069195413 -0.9781294371452037 -0.110646608979475 -2.0395950079401715
+DEF RANDOM_CONE_3 TrafficCone {
+  hidden linearVelocity_0 1.0847779800901658e-07 3.551419488682702e-08 -5.976895241843743e-07
+  hidden angularVelocity_0 -2.0955437111732814e-07 6.400820017687108e-07 4.052966461749294e-15
+  translation 56.438974260098064 -27.791920910166883 0.2349879505296696
+  rotation -0.17612533092992474 0.9781294367944631 0.11064661170126742 2.039594981416764
   name "traffic cone(3)"
   physics Physics {
     density -1
@@ -1768,182 +1749,69 @@ HighwayPole {
     }
   ]
 }
-Crossroad {
-  translation 76.500107 93 0
-  id "28"
-  shape []
-  connectedRoadIDs [
-    "18"
-    "12"
+Solid {
+  translation -177.98 40.39 0
+  children [
+    Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 0.5 500 10
+      }
+    }
   ]
+  boundingObject Box {
+    size 0.5 500 10
+  }
+  name "solid(3)"
 }
-Crossroad {
-  translation 36 133.50015 0
-  name "crossroad(1)"
-  id "29"
-  shape []
-  connectedRoadIDs [
-    "21"
-    "18"
+Solid {
+  translation 175.21 40.39 0
+  children [
+    Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 0.5 500 10
+      }
+    }
   ]
+  boundingObject Box {
+    size 0.5 500 10
+  }
+  name "solid(4)"
 }
-Crossroad {
-  translation -4.500405 174 0
-  name "crossroad(2)"
-  id "30"
-  shape []
-  connectedRoadIDs [
-    "22"
-    "21"
+Solid {
+  translation -0.3896 -198.51 0
+  rotation 0 0 1 1.5708
+  children [
+    Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 0.5 350 10
+      }
+    }
   ]
+  boundingObject Box {
+    size 0.5 350 10
+  }
+  name "solid(5)"
 }
-Crossroad {
-  translation -45.000035 133.49978 0
-  name "crossroad(3)"
-  id "31"
-  shape []
-  connectedRoadIDs [
-    "24"
-    "22"
+Solid {
+  translation -2.67132 269.73 0
+  rotation 0 0 1 1.5708
+  children [
+    Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 0.5 360 10
+      }
+    }
   ]
-}
-Crossroad {
-  translation 64.499851 231 0
-  name "crossroad(4)"
-  id "32"
-  shape []
-  connectedRoadIDs [
-    "15"
-    "19"
-  ]
-}
-Crossroad {
-  translation 104.99975 190.50007 0
-  name "crossroad(5)"
-  id "33"
-  shape []
-  connectedRoadIDs [
-    "16"
-    "19"
-  ]
-}
-Crossroad {
-  translation 165 52.500074 0
-  name "crossroad(6)"
-  id "34"
-  shape []
-  connectedRoadIDs [
-    "20"
-    "14"
-  ]
-}
-Crossroad {
-  translation 165.00028 -97.499835 0
-  name "crossroad(7)"
-  id "35"
-  shape []
-  connectedRoadIDs [
-    "11"
-    "14"
-  ]
-}
-Crossroad {
-  translation 75 -187.5 0
-  name "crossroad(8)"
-  id "36"
-  shape []
-  connectedRoadIDs [
-    "13"
-    "11"
-  ]
-}
-Crossroad {
-  translation 4.5 -104.99975 0
-  name "crossroad(9)"
-  id "37"
-  shape []
-  connectedRoadIDs [
-    "3"
-    "4"
-  ]
-}
-Crossroad {
-  translation -64.5 -105 0
-  name "crossroad(10)"
-  id "38"
-  shape []
-  connectedRoadIDs [
-    "2"
-    "3"
-  ]
-}
-Crossroad {
-  translation -104.99987 -64.499926 0
-  name "crossroad(11)"
-  id "39"
-  shape []
-  connectedRoadIDs [
-    "1"
-    "2"
-  ]
-}
-Crossroad {
-  translation -105 4.4999794 0
-  name "crossroad(12)"
-  id "40"
-  shape []
-  connectedRoadIDs [
-    "0"
-    "1"
-  ]
-}
-Crossroad {
-  translation -45.000015 -4.4999256 0
-  name "crossroad(13)"
-  id "41"
-  shape []
-  connectedRoadIDs [
-    "23"
-    "8"
-  ]
-}
-Crossroad {
-  translation -4.5 -45 0
-  name "crossroad(14)"
-  id "42"
-  shape []
-  connectedRoadIDs [
-    "9"
-    "8"
-  ]
-}
-Crossroad {
-  translation 45 4.5000744 0
-  name "crossroad(15)"
-  id "43"
-  shape []
-  connectedRoadIDs [
-    "5"
-    "6"
-  ]
-}
-Crossroad {
-  translation 4.4998512 45.00011 0
-  name "crossroad(16)"
-  id "44"
-  shape []
-  connectedRoadIDs [
-    "7"
-    "6"
-  ]
-}
-Crossroad {
-  translation 105 -4.4999256 0
-  name "crossroad(17)"
-  id "45"
-  shape []
-  connectedRoadIDs [
-    "10"
-    "17"
-  ]
+  boundingObject Box {
+    size 0.5 360 10
+  }
+  name "solid(6)"
 }

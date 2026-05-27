@@ -19,8 +19,9 @@ class DebugDisplayMixin:
             f"los {int(info['pursuer_visible'])} F/B {int(info['front_pursuer_visible'])}/{int(info['back_pursuer_visible'])} | "
             f"L/R/B {info['left_obstacle_distance']:.1f}/{info['right_obstacle_distance']:.1f}/{info['back_obstacle_distance']:.1f} | "
             f"T/B {info['throttle']:.2f}/{info['brake']:.2f} | "
-            f"move {info['movement_reward'] + info['still_penalty'] + info['survival_reward']:+.2f} | "
-            f"stab {info['fast_turn_penalty'] + info['tight_turn_penalty'] + info['clear_front_turn_penalty'] + info['straighten_reward'] + info['turn_towards_obstacle_penalty'] + info['path_prediction_reward'] + info['action_smoothness_penalty'] + info['tilt_penalty'] + info['obstacle_stall_penalty'] + info['overspeed_penalty']:+.2f} | "
+            f"move {info['movement_reward'] + info['still_penalty'] + info['survival_reward'] + info['exploration_reward']:+.2f} | "
+            f"cam {info['visual_moving_away_reward']:+.2f} | "
+            f"stab {info['stability_reward_total']:+.2f} | "
             f"obsR {info['obstacle_clearance_delta_reward'] + info['front_obstacle_penalty'] + info['side_obstacle_penalty'] + info['back_obstacle_penalty'] + info['back_approach_penalty']:+.2f}"
         )
         try:

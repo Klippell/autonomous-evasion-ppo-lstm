@@ -9,6 +9,7 @@ import numpy as np
 
 @dataclass(frozen=True)
 class RewardWeights:
+    # Pursuer / camera rewards.
     moving_away_positive_weight: float = 4.0
     moving_away_negative_weight: float = 8.0
     include_moving_away_reward: bool = False
@@ -17,6 +18,10 @@ class RewardWeights:
     line_of_sight_visible_penalty: float = -0.5
     visual_moving_away_weight: float = 12.0
     include_visual_moving_away_reward: bool = True
+    exploration_new_cell_reward: float = 2.0
+    exploration_revisit_penalty: float = -0.05
+
+    # Obstacle rewards.
     front_obstacle_penalty_weight: float = -9.0
     side_obstacle_penalty_weight: float = -2.0
     back_obstacle_penalty_weight: float = -1.0
@@ -24,14 +29,21 @@ class RewardWeights:
     side_clearance_delta_weight: float = 1.0
     back_clearance_delta_weight: float = 0.5
     back_approach_penalty_weight: float = -3.0
+    obstacle_stall_penalty: float = -1.0
+
+    # Movement / progress rewards.
     still_penalty: float = -3.0
     not_stuck_reward: float = 0.3
     movement_reward_weight: float = 4.0
-    obstacle_stall_penalty: float = -1.0
+    drive_reward_weight: float = 0.08
+    survival_reward_weight: float = 0.1
+
+    # Stability / control rewards.
     steering_penalty_weight: float = -0.01
     include_steering_penalty: bool = False
     fast_turn_penalty_weight: float = -1.0
     tight_turn_penalty_weight: float = -2.0
+    accelerating_turn_penalty_weight: float = -6.0
     clear_front_turn_penalty_weight: float = -0.7
     straighten_reward_weight: float = 1.2
     turn_towards_obstacle_penalty_weight: float = -2.0
@@ -40,8 +52,6 @@ class RewardWeights:
     action_smoothness_penalty_weight: float = -0.3
     tilt_penalty_weight: float = -5.0
     overspeed_penalty_weight: float = -4.0
-    drive_reward_weight: float = 0.08
-    survival_reward_weight: float = 0.1
 
 
 def reward_weights_from_mapping(values: dict[str, object] | RewardWeights | None) -> RewardWeights:
@@ -75,6 +85,7 @@ class RewardMixin:
             moving_away_reward = w.moving_away_negative_weight * distance_delta
         line_of_sight_reward = self._line_of_sight_reward(vision)
         visual_moving_away_reward = self._visual_moving_away_reward(vision)
+        exploration_reward = self._exploration_reward()
         front_obstacle_penalty = self._front_obstacle_penalty()
         side_obstacle_penalty = w.side_obstacle_penalty_weight * (
             math.exp(-sector_distances["left"] / 3.0)
@@ -104,7 +115,9 @@ class RewardMixin:
         normalized_speed = np.clip(speed_kmh / 70.0, 0.0, 1.0)
         fast_turn_penalty = w.fast_turn_penalty_weight * normalized_speed * abs(self.current_steering)
         steering_fraction = abs(float(np.clip(self.current_steering / 0.55, -1.0, 1.0)))
+        drive_fraction = max(0.0, drive)
         tight_turn_penalty = w.tight_turn_penalty_weight * max(0.0, steering_fraction - 0.55) ** 2
+        accelerating_turn_penalty = w.accelerating_turn_penalty_weight * drive_fraction * steering_fraction
         front_clearance = sector_distances["front"]
         front_clear_fraction = float(np.clip((front_clearance - 8.0) / 10.0, 0.0, 1.0))
         previous_steering_fraction = abs(float(np.clip(self.previous_action[0] / 0.55, -1.0, 1.0)))
@@ -125,39 +138,64 @@ class RewardMixin:
         elapsed_time = self.step_count * (self.timestep * self.action_repeat / 1000.0)
         survival_reward = 0.0 if is_stuck else w.survival_reward_weight * elapsed_time
 
-        reward_terms = [
+        pursuer_terms = [
+            line_of_sight_reward,
+        ]
+        if w.include_moving_away_reward:
+            pursuer_terms.append(moving_away_reward)
+        if w.include_visual_moving_away_reward:
+            pursuer_terms.append(visual_moving_away_reward)
+
+        obstacle_terms = [
             front_obstacle_penalty,
             side_obstacle_penalty,
             back_obstacle_penalty,
             obstacle_clearance_delta_reward,
             back_approach_penalty,
-            movement_reward,
-            still_penalty,
             obstacle_stall_penalty,
-            fast_turn_penalty,
-            tight_turn_penalty,
-            clear_front_turn_penalty,
-            straighten_reward,
             turn_towards_obstacle_penalty,
             path_prediction_reward,
+        ]
+        movement_terms = [
+            movement_reward,
+            still_penalty,
+            drive_reward,
+            exploration_reward,
+        ]
+        stability_terms = [
+            fast_turn_penalty,
+            tight_turn_penalty,
+            accelerating_turn_penalty,
+            clear_front_turn_penalty,
+            straighten_reward,
             action_smoothness_penalty,
             tilt_penalty,
             overspeed_penalty,
-            drive_reward,
-            survival_reward,
-            line_of_sight_reward,
         ]
-        if w.include_moving_away_reward:
-            reward_terms.append(moving_away_reward)
-        if w.include_visual_moving_away_reward:
-            reward_terms.append(visual_moving_away_reward)
         if w.include_steering_penalty:
-            reward_terms.append(steering_penalty)
+            stability_terms.append(steering_penalty)
+        survival_terms = [
+            survival_reward,
+        ]
+
+        reward_groups = {
+            "pursuer": pursuer_terms,
+            "obstacle": obstacle_terms,
+            "movement": movement_terms,
+            "stability": stability_terms,
+            "survival": survival_terms,
+        }
 
         reward_parts = {
             "obstacle_penalty": 0.0,
+            "pursuer_reward_total": float(sum(pursuer_terms)),
+            "obstacle_reward_total": float(sum(obstacle_terms)),
+            "movement_reward_total": float(sum(movement_terms)),
+            "stability_reward_total": float(sum(stability_terms)),
+            "survival_reward_total": float(sum(survival_terms)),
             "line_of_sight_reward": float(line_of_sight_reward),
             "visual_moving_away_reward": float(visual_moving_away_reward),
+            "exploration_reward": float(exploration_reward),
             "pursuer_visible": float(vision["visible"]),
             "front_pursuer_visible": float(vision["front_visible"]),
             "back_pursuer_visible": float(vision["back_visible"]),
@@ -174,6 +212,7 @@ class RewardMixin:
             "steering_penalty": float(steering_penalty),
             "fast_turn_penalty": float(fast_turn_penalty),
             "tight_turn_penalty": float(tight_turn_penalty),
+            "accelerating_turn_penalty": float(accelerating_turn_penalty),
             "clear_front_turn_penalty": float(clear_front_turn_penalty),
             "straighten_reward": float(straighten_reward),
             "turn_towards_obstacle_penalty": float(turn_towards_obstacle_penalty),
@@ -185,7 +224,7 @@ class RewardMixin:
         }
         self.previous_pursuer_visible = bool(vision["visible"])
         self.previous_pursuer_visual_size = float(vision["visual_size"])
-        return float(sum(reward_terms)), reward_parts
+        return float(sum(sum(terms) for terms in reward_groups.values())), reward_parts
 
     def _line_of_sight_reward(self, vision: dict[str, float]) -> float:
         visible = bool(vision["visible"])

@@ -1,6 +1,7 @@
 """Train the Webots evader with recurrent PPO."""
 import argparse
 import os
+import subprocess
 import sys
 import time
 from collections import deque
@@ -15,6 +16,7 @@ from stable_baselines3.common.base_class import BaseAlgorithm
 from stable_baselines3.common.callbacks import BaseCallback
 
 import controllers.evader_env
+from controllers.evader_env.webots_runtime import WEBOTS_HOME
 from controllers.experiment_config import (
     DEFAULT_CONFIG_PATH,
     env_kwargs_from_config,
@@ -22,6 +24,9 @@ from controllers.experiment_config import (
     model_kwargs_from_config,
     model_policy_from_config,
 )
+
+
+DEFAULT_WORLD_PATH = os.path.join(PROJECT_ROOT, "worlds", "my_city_traffic.wbt")
 
 
 class MetricCheckpointCallback(BaseCallback):
@@ -46,6 +51,7 @@ class MetricCheckpointCallback(BaseCallback):
 
     def _on_training_start(self) -> None:
         os.makedirs(self.save_path, exist_ok=True)
+        self.last_checkpoint_step = self.model.num_timesteps
 
     def _on_step(self) -> bool:
         for info in self.locals.get("infos", []):
@@ -98,11 +104,55 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--timesteps", type=int, default=None, help="Override training.timesteps from the config.")
     parser.add_argument("--log-dir", default=os.path.join(PROJECT_ROOT, "logs"))
     parser.add_argument("--save-name", default=None, help="Override training.save_name from the config.")
+    parser.add_argument("--resume-from", default=None, help="Continue training from an existing .zip checkpoint.")
+    parser.add_argument(
+        "--reset-timesteps",
+        action="store_true",
+        help="When resuming, start TensorBoard/checkpoint timesteps from zero instead of continuing.",
+    )
     parser.add_argument("--robot-name", default=os.environ.get("WEBOTS_ROBOT_NAME", "evader"))
     parser.add_argument("--checkpoint-freq", type=int, default=None, help="Override training.checkpoint_freq.")
     parser.add_argument("--metric-window", type=int, default=None, help="Override training.metric_window.")
     parser.add_argument("--hide-reward-display", action="store_true")
+    parser.add_argument("--random-obstacles", action="store_true", help="Randomize configured obstacle DEF nodes on each reset.")
+    parser.add_argument(
+        "--nowebots",
+        action="store_true",
+        help="Start Webots automatically in fast no-rendering batch mode before training.",
+    )
+    parser.add_argument("--webots-world", default=DEFAULT_WORLD_PATH, help="World file to open when using --nowebots.")
+    parser.add_argument("--webots-exe", default=None, help="Path to webots.exe when using --nowebots.")
     return parser.parse_args()
+
+
+def start_webots_no_rendering(webots_exe: str | None, world_path: str) -> subprocess.Popen:
+    executable = webots_exe or _default_webots_executable()
+    command = [
+        executable,
+        "--mode=fast",
+        "--no-rendering",
+        "--minimize",
+        "--batch",
+        "--stdout",
+        "--stderr",
+        os.path.abspath(world_path),
+    ]
+    print("Starting Webots without rendering:")
+    print(" ".join(f'"{part}"' if " " in part else part for part in command))
+    process = subprocess.Popen(command, cwd=PROJECT_ROOT)
+    time.sleep(5.0)
+    return process
+
+
+def _default_webots_executable() -> str:
+    candidates = [
+        os.path.join(WEBOTS_HOME, "msys64", "mingw64", "bin", "webots.exe"),
+        os.path.join(WEBOTS_HOME, "webots.exe"),
+    ]
+    for candidate in candidates:
+        if os.path.exists(candidate):
+            return candidate
+    return candidates[0]
 
 
 def main() -> None:
@@ -110,40 +160,64 @@ def main() -> None:
     config = load_experiment_config(args.config)
     training_config = config.get("training", {})
     os.makedirs(args.log_dir, exist_ok=True)
+    webots_process: subprocess.Popen | None = None
+    env: gym.Env | None = None
 
-    env_kwargs = env_kwargs_from_config(config)
-    env_kwargs.update(
-        robot_name=args.robot_name,
-        show_reward_display=not args.hide_reward_display,
-    )
-    env: gym.Env = gym.make(
-        "Evader-v0",
-        **env_kwargs,
-    )
-    model: BaseAlgorithm = RecurrentPPO(
-        model_policy_from_config(config),
-        env,
-        verbose=1,
-        tensorboard_log=os.path.join(args.log_dir, "tensorboard_logs"),
-        **model_kwargs_from_config(config),
-    )
+    try:
+        if args.nowebots:
+            webots_process = start_webots_no_rendering(args.webots_exe, args.webots_world)
 
-    save_name = args.save_name or training_config.get("save_name", "evader_recurrent_ppo")
-    checkpoint_callback = MetricCheckpointCallback(
-        save_freq=args.checkpoint_freq or int(training_config.get("checkpoint_freq", 50_000)),
-        save_path=os.path.join(args.log_dir, "checkpoints"),
-        name_prefix=save_name,
-        metric_window=args.metric_window or int(training_config.get("metric_window", 20)),
-        verbose=1,
-    )
-    model.learn(
-        total_timesteps=args.timesteps or int(training_config.get("timesteps", 1_000_000)),
-        log_interval=int(training_config.get("log_interval", 10)),
-        tb_log_name=time.strftime("%Y%m%d-%H%M%S"),
-        callback=checkpoint_callback,
-    )
-    model.save(os.path.join(args.log_dir, save_name))
-    env.close()
+        env_kwargs = env_kwargs_from_config(config)
+        env_kwargs.update(
+            robot_name=args.robot_name,
+            show_reward_display=not args.hide_reward_display,
+        )
+        if args.random_obstacles:
+            env_kwargs["randomize_obstacles"] = True
+        env = gym.make(
+            "Evader-v0",
+            **env_kwargs,
+        )
+        tensorboard_log = os.path.join(args.log_dir, "tensorboard_logs")
+        if args.resume_from:
+            print(f"Resuming training from: {os.path.abspath(args.resume_from)}")
+            model: BaseAlgorithm = RecurrentPPO.load(
+                args.resume_from,
+                env=env,
+                tensorboard_log=tensorboard_log,
+                verbose=1,
+            )
+        else:
+            model = RecurrentPPO(
+                model_policy_from_config(config),
+                env,
+                verbose=1,
+                tensorboard_log=tensorboard_log,
+                **model_kwargs_from_config(config),
+            )
+
+        save_name = args.save_name or training_config.get("save_name", "evader_recurrent_ppo")
+        checkpoint_callback = MetricCheckpointCallback(
+            save_freq=args.checkpoint_freq or int(training_config.get("checkpoint_freq", 50_000)),
+            save_path=os.path.join(args.log_dir, "checkpoints"),
+            name_prefix=save_name,
+            metric_window=args.metric_window or int(training_config.get("metric_window", 20)),
+            verbose=1,
+        )
+        model.learn(
+            total_timesteps=args.timesteps or int(training_config.get("timesteps", 1_000_000)),
+            log_interval=int(training_config.get("log_interval", 10)),
+            tb_log_name=time.strftime("%Y%m%d-%H%M%S"),
+            callback=checkpoint_callback,
+            reset_num_timesteps=args.reset_timesteps or args.resume_from is None,
+        )
+        model.save(os.path.join(args.log_dir, save_name))
+    finally:
+        if env is not None:
+            env.close()
+        if webots_process is not None and webots_process.poll() is None:
+            print("Stopping Webots.")
+            webots_process.terminate()
 
 
 if __name__ == "__main__":

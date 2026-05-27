@@ -36,6 +36,7 @@ def parse_args() -> argparse.Namespace:
         help="Sample actions from the policy, matching training-time behavior more closely.",
     )
     parser.add_argument("--hide-reward-display", action="store_true")
+    parser.add_argument("--random-obstacles", action="store_true", help="Randomize configured obstacle DEF nodes on each reset.")
     return parser.parse_args()
 
 
@@ -50,6 +51,8 @@ def main() -> None:
         robot_name=args.robot_name,
         show_reward_display=not args.hide_reward_display,
     )
+    if args.random_obstacles:
+        env_kwargs["randomize_obstacles"] = True
     env: gym.Env = gym.make(
         "Evader-v0",
         **env_kwargs,

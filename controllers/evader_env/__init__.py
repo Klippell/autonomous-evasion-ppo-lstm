@@ -9,7 +9,7 @@ from gymnasium.envs.registration import register, registry
 
 from controllers.evader_env.debug_display import DebugDisplayMixin
 from controllers.evader_env.reward import RewardMixin, reward_weights_from_mapping
-from controllers.evader_env.webots_runtime import DEFAULT_SPAWN_POSES, configure_webots_paths
+from controllers.evader_env.webots_runtime import DEFAULT_SPAWN_POSES, SpawnPose, configure_webots_paths
 
 
 class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
@@ -27,11 +27,21 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         still_distance_threshold: float = 0.1,
         self_lidar_ignore_distance: float = 0.06,
         action_repeat: int = 4,
-        pursuer_start_delay_steps: int = 65,
+        pursuer_start_delay_steps: int = 120,
         show_reward_display: bool = True,
         reward_display_interval: int = 1,
         show_car_display: bool = False,
         reset_vehicle_physics: bool = True,
+        exploration_cell_size: float = 8.0,
+        sensor_timestep: int | None = None,
+        enable_camera_recognition: bool = True,
+        randomize_obstacles: bool = False,
+        center_spawn_when_random_obstacles: bool = True,
+        random_obstacle_def_names: tuple[str, ...] | list[str] = (),
+        random_obstacle_bounds: tuple[float, float, float, float] | list[float] = (-170.0, 170.0, -190.0, 260.0),
+        random_obstacle_exclusion_center: tuple[float, float] | list[float] = (0.0, 0.0),
+        random_obstacle_exclusion_radius: float = 50.0,
+        random_obstacle_min_spacing: float = 12.0,
         reward_weights: dict[str, object] | None = None,
         front_camera_names: tuple[str, ...] | list[str] = ("front camera", "front Camera", "camera"),
         back_camera_names: tuple[str, ...] | list[str] = ("back camera", "rear camera"),
@@ -51,6 +61,16 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.reward_display_interval = reward_display_interval
         self.show_car_display = show_car_display
         self.reset_vehicle_physics = reset_vehicle_physics
+        self.exploration_cell_size = max(float(exploration_cell_size), 1.0)
+        self.sensor_timestep = sensor_timestep
+        self.enable_camera_recognition = enable_camera_recognition
+        self.randomize_obstacles = randomize_obstacles
+        self.center_spawn_when_random_obstacles = center_spawn_when_random_obstacles
+        self.random_obstacle_def_names = tuple(random_obstacle_def_names)
+        self.random_obstacle_bounds = tuple(float(value) for value in random_obstacle_bounds)
+        self.random_obstacle_exclusion_center = np.array(random_obstacle_exclusion_center, dtype=np.float32)
+        self.random_obstacle_exclusion_radius = float(random_obstacle_exclusion_radius)
+        self.random_obstacle_min_spacing = float(random_obstacle_min_spacing)
         self.reward_weights = reward_weights_from_mapping(reward_weights)
         self.front_camera_names = tuple(front_camera_names)
         self.back_camera_names = tuple(back_camera_names)
@@ -63,8 +83,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         )
         self.observation_space = spaces.Dict(
             {
-                "lidar": spaces.Box(0.0, 1.0, shape=(16,), dtype=np.float32),
-                "vision": spaces.Box(-1.0, 1.0, shape=(8,), dtype=np.float32),
+                "lidar": spaces.Box(0.0, 1.0, shape=(12,), dtype=np.float32),
+                "vision": spaces.Box(0.0, 1.0, shape=(1,), dtype=np.float32),
                 "pursuer": spaces.Box(-1.0, 1.0, shape=(4,), dtype=np.float32),
                 "ego": spaces.Box(-1.0, 1.0, shape=(5,), dtype=np.float32),
             }
@@ -84,6 +104,7 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.evader_rotation_field: Any = None
         self.pursuer_translation_field: Any = None
         self.pursuer_rotation_field: Any = None
+        self.random_obstacles: list[tuple[Any, Any, Any | None, float]] = []
 
         self.timestep = 32
         self.step_count = 0
@@ -99,6 +120,7 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.recognition_enabled_cameras: set[int] = set()
         self.previous_pursuer_visible = True
         self.previous_pursuer_visual_size = 0.0
+        self.visited_exploration_cells: set[tuple[int, int]] = set()
 
         self.spawn_poses = DEFAULT_SPAWN_POSES
 
@@ -109,8 +131,9 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.current_steering = 0.0
         self.previous_action = np.zeros(2, dtype=np.float32)
         self.previous_speed_mps = 0.0
+        self.visited_exploration_cells.clear()
 
-        pose = self.spawn_poses[0]
+        pose = self._spawn_pose_for_episode()
         if self.evader_translation_field is not None:
             self._set_vehicle_pose(
                 self.evader_node,
@@ -129,6 +152,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
                 pose.heading,
                 z=0.55,
             )
+        if self.randomize_obstacles:
+            self._randomize_obstacle_poses()
 
         self.driver.setGear(1)
         self.driver.setCruisingSpeed(0.0)
@@ -141,6 +166,7 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         pursuer_xy = self._pursuer_xy()
         self.previous_position = evader_xy
         self.previous_distance = self._distance(evader_xy, pursuer_xy)
+        self.visited_exploration_cells.add(self._exploration_cell(evader_xy))
         self._observation()
         self.previous_sector_distances = self._lidar_sector_distances()
         initial_vision = self._camera_pursuer_observation()
@@ -180,7 +206,7 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         front_lidar = front_obstacle_distance / self._lidar_max_range()
 
         moved_distance = self._moved_distance(evader_xy)
-        speed_kmh = abs(float(self.driver.getCurrentSpeed()))
+        speed_kmh = abs(self._current_speed_kmh())
         reward, reward_parts = self._reward(distance, sector_distances, clipped_action, speed_kmh, moved_distance)
         terminated = False
         truncated = self.step_count >= self.max_episode_steps
@@ -243,6 +269,7 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
 
         self.driver = Driver()
         self.timestep = int(self.driver.getBasicTimeStep())
+        sensor_timestep = max(int(self.sensor_timestep or self.timestep), self.timestep)
         self.directional_lidars = {
             "front": self._device_by_name(("front lidar",)),
             "left": self._device_by_name(("left lidar",)),
@@ -258,15 +285,16 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.back_camera = self._device_by_name(self.back_camera_names)
 
         for lidar in self.directional_lidars.values():
-            lidar.enable(self.timestep)
-        for camera in (self.front_camera, self.back_camera):
-            self._enable_camera(camera)
+            lidar.enable(sensor_timestep)
+        if self.enable_camera_recognition:
+            for camera in (self.front_camera, self.back_camera):
+                self._enable_camera(camera, sensor_timestep)
         if self.gps is not None:
-            self.gps.enable(self.timestep)
+            self.gps.enable(sensor_timestep)
         if self.gyro is not None:
-            self.gyro.enable(self.timestep)
+            self.gyro.enable(sensor_timestep)
         if self.touch_sensor is not None:
-            self.touch_sensor.enable(self.timestep)
+            self.touch_sensor.enable(sensor_timestep)
 
         self.evader_node = self._node_by_def("Evader")
         self.pursuer_node = self._node_by_def("Pursuer")
@@ -276,6 +304,7 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         if self.pursuer_node is not None:
             self.pursuer_translation_field = self.pursuer_node.getField("translation")
             self.pursuer_rotation_field = self.pursuer_node.getField("rotation")
+        self._collect_random_obstacles()
 
     def _device_by_name(self, names: tuple[str, ...]):
         for name in names:
@@ -296,6 +325,11 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
             if self.driver.step() == -1:
                 break
 
+    def _spawn_pose_for_episode(self) -> SpawnPose:
+        if self.randomize_obstacles and self.center_spawn_when_random_obstacles:
+            return SpawnPose((0.0, 0.0), (-55.0, 0.0), 0.0)
+        return self.spawn_poses[0]
+
     def _set_vehicle_pose(
         self,
         node: Any,
@@ -309,6 +343,59 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         rotation_field.setSFRotation([0.0, 0.0, 1.0, heading])
         if self.reset_vehicle_physics and node is not None:
             node.resetPhysics()
+
+    def _collect_random_obstacles(self) -> None:
+        self.random_obstacles = []
+        for def_name in self.random_obstacle_def_names:
+            node = self._node_by_def(def_name)
+            if node is None:
+                print(f"Random obstacle DEF '{def_name}' was not found.")
+                continue
+            translation_field = node.getField("translation")
+            if translation_field is None:
+                print(f"Random obstacle DEF '{def_name}' has no translation field.")
+                continue
+            rotation_field = node.getField("rotation")
+            try:
+                z = float(translation_field.getSFVec3f()[2])
+            except Exception:
+                z = 0.0
+            self.random_obstacles.append((node, translation_field, rotation_field, z))
+
+    def _randomize_obstacle_poses(self) -> None:
+        if not self.random_obstacles:
+            return
+
+        placed: list[np.ndarray] = []
+        for node, translation_field, rotation_field, z in self.random_obstacles:
+            xy = self._sample_random_obstacle_xy(placed)
+            placed.append(xy)
+            translation_field.setSFVec3f([float(xy[0]), float(xy[1]), z])
+            if rotation_field is not None:
+                yaw = float(self.np_random.uniform(-math.pi, math.pi))
+                rotation_field.setSFRotation([0.0, 0.0, 1.0, yaw])
+            try:
+                node.resetPhysics()
+            except Exception:
+                pass
+
+    def _sample_random_obstacle_xy(self, placed: list[np.ndarray]) -> np.ndarray:
+        min_x, max_x, min_y, max_y = self.random_obstacle_bounds
+        for _ in range(500):
+            xy = np.array(
+                [
+                    self.np_random.uniform(min_x, max_x),
+                    self.np_random.uniform(min_y, max_y),
+                ],
+                dtype=np.float32,
+            )
+            if np.linalg.norm(xy - self.random_obstacle_exclusion_center) < self.random_obstacle_exclusion_radius:
+                continue
+            if any(np.linalg.norm(xy - other) < self.random_obstacle_min_spacing for other in placed):
+                continue
+            return xy
+
+        return np.array([min_x, min_y], dtype=np.float32)
 
     def _move_pursuer(self) -> None:
         if self.pursuer_translation_field is None or self.pursuer_rotation_field is None:
@@ -333,25 +420,19 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         evader_xy = self._evader_xy()
         pursuer_xy = self._pursuer_xy()
         delta = pursuer_xy - evader_xy
+        delta = np.nan_to_num(delta, nan=0.0, posinf=0.0, neginf=0.0)
         distance = max(float(np.linalg.norm(delta)), 1e-6)
         bearing = math.atan2(float(delta[1]), float(delta[0]))
 
-        speed_kmh = float(self.driver.getCurrentSpeed()) if self.driver is not None else 0.0
+        speed_kmh = self._current_speed_kmh()
         speed_mps = speed_kmh / 3.6
         acceleration_mps2 = self._current_acceleration(speed_mps)
         vision = self._camera_pursuer_observation()
-        return {
+        return self._sanitize_observation({
             "lidar": self._lidar_bins(),
             "vision": np.array(
                 [
                     vision["visible"],
-                    vision["front_visible"],
-                    vision["front_x"],
-                    vision["front_bearing"],
-                    vision["back_visible"],
-                    vision["back_x"],
-                    vision["back_bearing"],
-                    vision["visual_size"],
                 ],
                 dtype=np.float32,
             ),
@@ -374,24 +455,44 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
                 ],
                 dtype=np.float32,
             ),
-        }
+        })
 
     def _lidar_bins(self) -> np.ndarray:
         if self.directional_lidars:
             bins: list[float] = []
             self.directional_lidar_ranges = {}
-            for direction in ("front", "left", "right", "back"):
+            for direction in ("front", "left", "back", "right"):
                 ranges = self._read_lidar_ranges(self.directional_lidars.get(direction))
                 self.directional_lidar_ranges[direction] = ranges
                 max_range = self._lidar_max_range(self.directional_lidars.get(direction))
                 if ranges.size == 0:
-                    bins.extend([1.0, 1.0, 1.0, 1.0])
+                    bins.extend([1.0, 1.0, 1.0])
                 else:
-                    chunks = np.array_split(ranges, 4)
+                    chunks = np.array_split(ranges, 3)
                     bins.extend([float(np.min(chunk) / max_range) for chunk in chunks])
             return np.array(bins, dtype=np.float32)
 
-        return np.ones(16, dtype=np.float32)
+        return np.ones(12, dtype=np.float32)
+
+    def _sanitize_observation(self, obs: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+        sanitized: dict[str, np.ndarray] = {}
+        for key, value in obs.items():
+            low = self.observation_space[key].low
+            high = self.observation_space[key].high
+            clean = np.nan_to_num(value.astype(np.float32), nan=0.0, posinf=1.0, neginf=-1.0)
+            sanitized[key] = np.clip(clean, low, high).astype(np.float32)
+        return sanitized
+
+    def _current_speed_kmh(self) -> float:
+        if self.driver is None:
+            return 0.0
+        try:
+            speed = float(self.driver.getCurrentSpeed())
+        except Exception:
+            return 0.0
+        if not math.isfinite(speed):
+            return 0.0
+        return speed
 
     def _read_lidar_ranges(self, lidar: Any | None) -> np.ndarray:
         if lidar is None:
@@ -414,11 +515,11 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         except Exception:
             return 0.0
 
-    def _enable_camera(self, camera: Any | None) -> None:
+    def _enable_camera(self, camera: Any | None, sensor_timestep: int) -> None:
         if camera is None:
             return
         try:
-            camera.enable(self.timestep)
+            camera.enable(sensor_timestep)
         except Exception:
             return
         for method_name in ("recognitionEnable", "enableRecognition", "recognition_enable"):
@@ -426,7 +527,7 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
             if method is None:
                 continue
             try:
-                method(self.timestep)
+                method(sensor_timestep)
                 self.recognition_enabled_cameras.add(id(camera))
                 return
             except Exception:
@@ -434,7 +535,7 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         recognition = self._camera_recognition(camera)
         if recognition is not None:
             try:
-                recognition.enable(self.timestep)
+                recognition.enable(sensor_timestep)
                 self.recognition_enabled_cameras.add(id(camera))
             except Exception:
                 pass
@@ -660,7 +761,24 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
     def _moved_distance(self, evader_xy: np.ndarray) -> float:
         if self.previous_position is None:
             return 0.0
+        if not np.all(np.isfinite(evader_xy)) or not np.all(np.isfinite(self.previous_position)):
+            return 0.0
         return float(np.linalg.norm(evader_xy - self.previous_position))
+
+    def _exploration_reward(self) -> float:
+        cell = self._exploration_cell(self._evader_xy())
+        if cell in self.visited_exploration_cells:
+            return self.reward_weights.exploration_revisit_penalty
+        self.visited_exploration_cells.add(cell)
+        return self.reward_weights.exploration_new_cell_reward
+
+    def _exploration_cell(self, xy: np.ndarray) -> tuple[int, int]:
+        if not np.all(np.isfinite(xy)):
+            xy = self._evader_translation_xy()
+        return (
+            int(math.floor(float(xy[0]) / self.exploration_cell_size)),
+            int(math.floor(float(xy[1]) / self.exploration_cell_size)),
+        )
 
     def _has_collision(self, min_lidar: float) -> bool:
         return self._has_touch_contact() or min_lidar <= 0.015
@@ -678,7 +796,12 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
     def _evader_xy(self) -> np.ndarray:
         if self.gps is not None:
             values = self.gps.getValues()
-            return np.array([values[0], values[1]], dtype=np.float32)
+            xy = np.array([values[0], values[1]], dtype=np.float32)
+            if np.all(np.isfinite(xy)):
+                return xy
+        return self._evader_translation_xy()
+
+    def _evader_translation_xy(self) -> np.ndarray:
         if self.evader_translation_field is not None:
             values = self.evader_translation_field.getSFVec3f()
             return np.array([values[0], values[1]], dtype=np.float32)
@@ -692,6 +815,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
 
     @staticmethod
     def _distance(a: np.ndarray, b: np.ndarray) -> float:
+        if not np.all(np.isfinite(a)) or not np.all(np.isfinite(b)):
+            return 1e6
         return float(np.linalg.norm(a - b))
 
 
