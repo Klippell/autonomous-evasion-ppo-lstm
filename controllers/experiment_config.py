@@ -29,14 +29,19 @@ def env_kwargs_from_config(config: dict[str, Any]) -> dict[str, Any]:
 
 def model_kwargs_from_config(config: dict[str, Any]) -> dict[str, Any]:
     kwargs = deepcopy(config.get("model", {}))
+    kwargs.pop("algorithm", None)
     kwargs.pop("policy", None)
     if "policy_kwargs" in kwargs:
         kwargs["policy_kwargs"] = deepcopy(kwargs["policy_kwargs"])
     return kwargs
 
 
+def model_algorithm_from_config(config: dict[str, Any]) -> str:
+    return str(config.get("model", {}).get("algorithm", "ppo"))
+
+
 def model_policy_from_config(config: dict[str, Any]) -> str:
-    return str(config.get("model", {}).get("policy", "MultiInputLstmPolicy"))
+    return str(config.get("model", {}).get("policy", "MultiInputPolicy"))
 
 
 def _read_json(path: str) -> dict[str, Any]:

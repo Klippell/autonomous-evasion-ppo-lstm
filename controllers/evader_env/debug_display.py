@@ -16,13 +16,16 @@ class DebugDisplayMixin:
             f"reward {reward:+.2f} | "
             f"pursuer {info['distance_to_pursuer']:.1f} m | "
             f"front {info['front_obstacle_distance']:.1f} m | "
-            f"los {int(info['pursuer_visible'])} F/B {int(info['front_pursuer_visible'])}/{int(info['back_pursuer_visible'])} | "
+            f"los {int(info['pursuer_visible'])} F/L/R/B {int(info['front_pursuer_visible'])}/{int(info['left_pursuer_visible'])}/{int(info['right_pursuer_visible'])}/{int(info['back_pursuer_visible'])} | "
             f"L/R/B {info['left_obstacle_distance']:.1f}/{info['right_obstacle_distance']:.1f}/{info['back_obstacle_distance']:.1f} | "
             f"T/B {info['throttle']:.2f}/{info['brake']:.2f} | "
+            f"risk {info['front_corridor_risk']:.2f} safe {int(info['obstacle_safety_active'])}/{info['obstacle_safety_action_delta']:.2f} | "
+            f"turn {info['obstacle_heading_progress']:.2f}/{info['obstacle_heading_goal']:.2f} | "
+            f"esc {info['pursuer_reward_total']:+.2f} | "
             f"move {info['movement_reward'] + info['still_penalty'] + info['survival_reward'] + info['exploration_reward']:+.2f} | "
             f"cam {info['visual_moving_away_reward']:+.2f} | "
             f"stab {info['stability_reward_total']:+.2f} | "
-            f"obsR {info['obstacle_clearance_delta_reward'] + info['front_obstacle_penalty'] + info['side_obstacle_penalty'] + info['back_obstacle_penalty'] + info['back_approach_penalty']:+.2f}"
+            f"obsR {info['obstacle_clearance_delta_reward'] + info['front_obstacle_penalty'] + info['side_obstacle_penalty'] + info['back_obstacle_penalty'] + info['back_approach_penalty'] + info['front_blocked_speed_penalty'] + info['front_blocked_drive_penalty'] + info['front_blocked_straight_penalty'] + info['front_blocked_brake_reward'] + info['obstacle_action_reward'] + info['obstacle_action_penalty'] + info['obstacle_turn_commitment_reward'] + info['obstacle_turn_switch_penalty'] + info['obstacle_turn_progress_reward'] + info['obstacle_wrong_heading_penalty'] + info['obstacle_insufficient_turn_penalty'] + info['avoidance_turn_reward'] + info['over_avoidance_turn_penalty']:+.2f}"
         )
         try:
             self.driver.setLabel(0, text, 0.02, 0.03, 0.08, color, 0.0, "Arial")
