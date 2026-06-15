@@ -124,13 +124,43 @@ DEBUG_INFO_KEYS = (
     "obstacle_turn_direction",
     "obstacle_safety_active",
     "obstacle_safety_action_delta",
+    "evader_steering_target",
+    "evader_steering_command_target",
+    "evader_steering_stabilization_active",
+    "evader_steering_stabilization_delta",
+    "evader_steering_commit_direction",
+    "evader_steering_commit_steps_left",
     "pursuer_avoidance_active",
     "pursuer_avoidance_obstacle_count",
+    "pursuer_avoidance_side",
+    "pursuer_avoidance_commit_steps_left",
+    "pursuer_return_to_chase_steps_left",
+    "pursuer_lidar_avoidance_active",
+    "pursuer_lidar_front_distance",
+    "pursuer_lidar_left_distance",
+    "pursuer_lidar_right_distance",
+    "pursuer_lidar_danger_count",
+    "pursuer_planner_active",
+    "pursuer_planner_path_length",
+    "pursuer_planner_replan",
+    "pursuer_planner_stuck_recovery",
+    "pursuer_count",
+    "pursuer_direct_chase_hold_steps_left",
     "pursuer_behavior_limited",
     "pursuer_line_of_sight",
     "pursuer_info_mode",
     "pursuer_hint_refresh",
     "pursuer_hint_age_seconds",
+    "timing_total_ms",
+    "timing_control_ms",
+    "timing_pursuer_ms",
+    "timing_webots_ms",
+    "timing_webots_max_step_ms",
+    "timing_webots_steps",
+    "timing_observation_ms",
+    "timing_reward_ms",
+    "timing_finish_ms",
+    "timing_display_ms",
 )
 
 OBS_FIELD_NAMES = (
@@ -336,6 +366,8 @@ class DebugReport:
             "speed_kmh",
             "applied_steering",
             "applied_drive",
+            "evader_steering_stabilization_active",
+            "evader_steering_stabilization_delta",
             "pursuer_reward_total",
             "obstacle_reward_total",
             "movement_reward_total",
@@ -363,10 +395,27 @@ class DebugReport:
             f"idx {int(float(row['policy_steering_index']))}/{int(float(row['policy_drive_index']))} "
             f"q {float(row['quantized_steering']):+.2f} "
             f"app {float(row['applied_steering']):+.2f}/{float(row['applied_drive']):+.2f} "
+            f"eSt {int(float(row['evader_steering_stabilization_active']))}/"
+            f"{float(row['evader_steering_stabilization_delta']):.2f}/"
+            f"{int(float(row['evader_steering_commit_direction']))}/"
+            f"{int(float(row['evader_steering_commit_steps_left']))} "
             f"spd {float(row['speed_kmh']):.1f} "
             f"safe {int(float(row['obstacle_safety_active']))}/{float(row['obstacle_safety_action_delta']):.2f} "
             f"pAvoid {int(float(row['pursuer_avoidance_active']))}/{int(float(row['pursuer_avoidance_obstacle_count']))} "
+            f"pSide {int(float(row['pursuer_avoidance_side']))}/{int(float(row['pursuer_avoidance_commit_steps_left']))} "
+            f"pLid {int(float(row['pursuer_lidar_avoidance_active']))}/"
+            f"{float(row['pursuer_lidar_front_distance']):.1f}/"
+            f"{float(row['pursuer_lidar_left_distance']):.1f}/"
+            f"{float(row['pursuer_lidar_right_distance']):.1f} "
+            f"pPlan {int(float(row['pursuer_planner_active']))}/"
+            f"{int(float(row['pursuer_planner_path_length']))}/"
+            f"{int(float(row['pursuer_planner_replan']))}/"
+            f"{int(float(row['pursuer_planner_stuck_recovery']))} "
             f"pInfo {int(float(row['pursuer_info_mode']))}/{int(float(row['pursuer_line_of_sight']))}/{float(row['pursuer_hint_age_seconds']):.0f}s "
+            f"tim {float(row['timing_total_ms']):.0f}/"
+            f"{float(row['timing_webots_ms']):.0f}/"
+            f"{float(row['timing_webots_max_step_ms']):.0f}/"
+            f"{float(row['timing_display_ms']):.0f}ms "
             f"touch {int(float(row['touch_contact']))}/{int(float(row['raw_touch_sensor_contact']))}/{int(float(row['touch_collision_plausible']))} "
             f"cap {int(float(row['captured']))} "
             f"grp P/O/M/S/U {float(row['pursuer_reward_total']):+.2f}/"
