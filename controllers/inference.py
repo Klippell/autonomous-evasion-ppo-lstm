@@ -124,6 +124,13 @@ DEBUG_INFO_KEYS = (
     "obstacle_turn_direction",
     "obstacle_safety_active",
     "obstacle_safety_action_delta",
+    "pursuer_avoidance_active",
+    "pursuer_avoidance_obstacle_count",
+    "pursuer_behavior_limited",
+    "pursuer_line_of_sight",
+    "pursuer_info_mode",
+    "pursuer_hint_refresh",
+    "pursuer_hint_age_seconds",
 )
 
 OBS_FIELD_NAMES = (
@@ -358,6 +365,8 @@ class DebugReport:
             f"app {float(row['applied_steering']):+.2f}/{float(row['applied_drive']):+.2f} "
             f"spd {float(row['speed_kmh']):.1f} "
             f"safe {int(float(row['obstacle_safety_active']))}/{float(row['obstacle_safety_action_delta']):.2f} "
+            f"pAvoid {int(float(row['pursuer_avoidance_active']))}/{int(float(row['pursuer_avoidance_obstacle_count']))} "
+            f"pInfo {int(float(row['pursuer_info_mode']))}/{int(float(row['pursuer_line_of_sight']))}/{float(row['pursuer_hint_age_seconds']):.0f}s "
             f"touch {int(float(row['touch_contact']))}/{int(float(row['raw_touch_sensor_contact']))}/{int(float(row['touch_collision_plausible']))} "
             f"cap {int(float(row['captured']))} "
             f"grp P/O/M/S/U {float(row['pursuer_reward_total']):+.2f}/"
@@ -449,6 +458,14 @@ def parse_args() -> argparse.Namespace:
         help="Disable the obstacle safety teacher even if the config enables it.",
     )
     parser.add_argument(
+        "--limited-info-pursuer",
+        action="store_true",
+        help=(
+            "Use the experiment pursuer: random spawn, random patrol, noisy direction hints every "
+            "10 seconds, and exact pursuit only with line of sight."
+        ),
+    )
+    parser.add_argument(
         "--center-spawn",
         action="store_true",
         help="Use the centered spawn used by random-obstacle training, even without randomizing obstacles.",
@@ -516,6 +533,9 @@ def main() -> None:
     )
     if args.obstacle_safety is not None:
         env_kwargs["obstacle_safety_enabled"] = args.obstacle_safety
+    if args.limited_info_pursuer:
+        env_kwargs["pursuer_behavior_mode"] = "limited_info_patrol"
+        env_kwargs["pursuer_random_spawn"] = True
     if args.random_obstacles:
         env_kwargs["randomize_obstacles"] = True
     if args.enriched_random_obstacles:

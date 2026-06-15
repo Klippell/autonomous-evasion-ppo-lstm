@@ -48,6 +48,13 @@ INFO_TENSORBOARD_KEYS = (
     "obstacle_risk_escape_scale",
     "obstacle_safety_active",
     "obstacle_safety_action_delta",
+    "pursuer_avoidance_active",
+    "pursuer_avoidance_obstacle_count",
+    "pursuer_behavior_limited",
+    "pursuer_line_of_sight",
+    "pursuer_info_mode",
+    "pursuer_hint_refresh",
+    "pursuer_hint_age_seconds",
     "captured",
     "obstacle_collision",
     "rollover",
@@ -278,6 +285,14 @@ def parse_args() -> argparse.Namespace:
         action="store_false",
         help="Disable the obstacle safety teacher even if the config enables it.",
     )
+    parser.add_argument(
+        "--limited-info-pursuer",
+        action="store_true",
+        help=(
+            "Use the experiment pursuer: random spawn, random patrol, noisy direction hints every "
+            "10 seconds, and exact pursuit only with line of sight."
+        ),
+    )
     parser.add_argument("--random-obstacles", action="store_true", help="Randomize configured obstacle DEF nodes on each reset.")
     parser.add_argument(
         "--enriched-random-obstacles",
@@ -382,6 +397,9 @@ def main() -> None:
         )
         if args.obstacle_safety is not None:
             env_kwargs["obstacle_safety_enabled"] = args.obstacle_safety
+        if args.limited_info_pursuer:
+            env_kwargs["pursuer_behavior_mode"] = "limited_info_patrol"
+            env_kwargs["pursuer_random_spawn"] = True
         if args.random_obstacles:
             env_kwargs["randomize_obstacles"] = True
         if args.enriched_random_obstacles:

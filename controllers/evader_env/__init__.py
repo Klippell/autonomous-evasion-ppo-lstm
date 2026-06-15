@@ -1,5 +1,6 @@
 import math
 import os
+from dataclasses import dataclass
 from typing import Any
 
 import gymnasium as gym
@@ -10,6 +11,20 @@ from gymnasium.envs.registration import register, registry
 from controllers.evader_env.debug_display import DebugDisplayMixin
 from controllers.evader_env.reward import RewardMixin, reward_weights_from_mapping
 from controllers.evader_env.webots_runtime import DEFAULT_SPAWN_POSES, SpawnPose, configure_webots_paths
+
+
+@dataclass(frozen=True)
+class ObstacleFootprint:
+    radius: float
+    vertices: tuple[tuple[float, float], ...] = ()
+
+
+@dataclass
+class WorldFootprint:
+    center: np.ndarray
+    radius: float
+    label: str
+    vertices: np.ndarray | None = None
 
 
 class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
@@ -43,6 +58,19 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         obstacle_safety_brake_distance: float = 4.5,
         obstacle_safety_min_steering: float = 0.25,
         obstacle_safety_corridor_width: float = 0.45,
+        pursuer_avoid_obstacles: bool = True,
+        pursuer_obstacle_margin: float = 0.75,
+        pursuer_behavior_mode: str = "direct_chase",
+        pursuer_random_spawn: bool = False,
+        pursuer_random_spawn_bounds: tuple[float, float, float, float] | list[float] | None = None,
+        pursuer_random_spawn_min_evader_distance: float = 35.0,
+        pursuer_random_spawn_obstacle_margin: float = 8.0,
+        pursuer_limited_info_update_seconds: float = 10.0,
+        pursuer_limited_info_direction_noise_degrees: float = 20.0,
+        pursuer_limited_info_patrol_update_seconds: float = 2.5,
+        pursuer_limited_info_patrol_turn_degrees: float = 35.0,
+        pursuer_line_of_sight_max_distance: float = 140.0,
+        pursuer_line_of_sight_obstacle_margin: float = 2.0,
         show_reward_display: bool = True,
         reward_display_interval: int = 1,
         show_car_display: bool = False,
@@ -66,6 +94,7 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         random_obstacle_exclusion_center: tuple[float, float] | list[float] = (0.0, 0.0),
         random_obstacle_exclusion_radius: float = 30.0,
         random_obstacle_min_spacing: float = 12.0,
+        random_obstacle_edge_spacing: float = 3.0,
         reward_weights: dict[str, object] | None = None,
         front_camera_names: tuple[str, ...] | list[str] = ("front camera", "front Camera", "camera"),
         back_camera_names: tuple[str, ...] | list[str] = ("back camera", "rear camera"),
@@ -98,6 +127,22 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.obstacle_safety_brake_distance = float(obstacle_safety_brake_distance)
         self.obstacle_safety_min_steering = float(obstacle_safety_min_steering)
         self.obstacle_safety_corridor_width = float(obstacle_safety_corridor_width)
+        self.pursuer_avoid_obstacles = bool(pursuer_avoid_obstacles)
+        self.pursuer_obstacle_margin = max(float(pursuer_obstacle_margin), 0.0)
+        self.pursuer_behavior_mode = str(pursuer_behavior_mode).lower()
+        if self.pursuer_behavior_mode not in {"direct_chase", "limited_info_patrol"}:
+            raise ValueError("pursuer_behavior_mode must be 'direct_chase' or 'limited_info_patrol'.")
+        self.pursuer_random_spawn = bool(pursuer_random_spawn or self.pursuer_behavior_mode == "limited_info_patrol")
+        spawn_bounds = pursuer_random_spawn_bounds if pursuer_random_spawn_bounds is not None else random_obstacle_bounds
+        self.pursuer_random_spawn_bounds = tuple(float(value) for value in spawn_bounds)
+        self.pursuer_random_spawn_min_evader_distance = max(float(pursuer_random_spawn_min_evader_distance), 0.0)
+        self.pursuer_random_spawn_obstacle_margin = max(float(pursuer_random_spawn_obstacle_margin), 0.0)
+        self.pursuer_limited_info_update_seconds = max(float(pursuer_limited_info_update_seconds), 0.1)
+        self.pursuer_limited_info_direction_noise_degrees = max(float(pursuer_limited_info_direction_noise_degrees), 0.0)
+        self.pursuer_limited_info_patrol_update_seconds = max(float(pursuer_limited_info_patrol_update_seconds), 0.1)
+        self.pursuer_limited_info_patrol_turn_degrees = max(float(pursuer_limited_info_patrol_turn_degrees), 0.0)
+        self.pursuer_line_of_sight_max_distance = max(float(pursuer_line_of_sight_max_distance), 0.0)
+        self.pursuer_line_of_sight_obstacle_margin = max(float(pursuer_line_of_sight_obstacle_margin), 0.0)
         self.show_reward_display = show_reward_display
         self.reward_display_interval = reward_display_interval
         self.show_car_display = show_car_display
@@ -121,6 +166,7 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.random_obstacle_exclusion_center = np.array(random_obstacle_exclusion_center, dtype=np.float32)
         self.random_obstacle_exclusion_radius = float(random_obstacle_exclusion_radius)
         self.random_obstacle_min_spacing = float(random_obstacle_min_spacing)
+        self.random_obstacle_edge_spacing = max(float(random_obstacle_edge_spacing), 0.0)
         self.reward_weights = reward_weights_from_mapping(reward_weights)
         self.front_camera_names = tuple(front_camera_names)
         self.back_camera_names = tuple(back_camera_names)
@@ -164,7 +210,9 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.evader_rotation_field: Any = None
         self.pursuer_translation_field: Any = None
         self.pursuer_rotation_field: Any = None
-        self.random_obstacles: list[tuple[Any, Any, Any | None, float, str, float]] = []
+        self.random_obstacles: list[tuple[Any, Any, Any | None, float, str, ObstacleFootprint]] = []
+        self.pursuer_obstacles: list[tuple[Any, Any, Any | None, ObstacleFootprint, str]] = []
+        self.pursuer_obstacle_cache: list[WorldFootprint] = []
 
         self.timestep = 32
         self.step_count = 0
@@ -181,6 +229,15 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.raw_action = np.zeros(2, dtype=np.float32)
         self.obstacle_safety_active = False
         self.obstacle_safety_action_delta = 0.0
+        self.pursuer_avoidance_active = False
+        self.pursuer_avoidance_obstacle_count = 0
+        self.pursuer_line_of_sight = False
+        self.pursuer_info_mode = 0
+        self.pursuer_hint_refresh = False
+        self.pursuer_last_hint_step = -1_000_000
+        self.pursuer_last_patrol_step = -1_000_000
+        self.pursuer_hint_unit = np.array([1.0, 0.0], dtype=np.float32)
+        self.pursuer_search_unit = np.array([1.0, 0.0], dtype=np.float32)
         self.last_reward_log_step = 0
         self.label_debug_reported = False
         self.directional_lidar_ranges: dict[str, np.ndarray] = {}
@@ -203,11 +260,19 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.raw_action = np.zeros(2, dtype=np.float32)
         self.obstacle_safety_active = False
         self.obstacle_safety_action_delta = 0.0
+        self.pursuer_avoidance_active = False
+        self.pursuer_avoidance_obstacle_count = 0
+        self.pursuer_line_of_sight = False
+        self.pursuer_info_mode = 0
+        self.pursuer_hint_refresh = False
+        self.pursuer_last_hint_step = -1_000_000
+        self.pursuer_last_patrol_step = -1_000_000
         self.previous_action = np.zeros(2, dtype=np.float32)
         self.previous_speed_mps = 0.0
         self.visited_exploration_cells.clear()
 
         pose = self._spawn_pose_for_episode()
+        evader_spawn_xy = np.array(pose.evader_xy, dtype=np.float32)
         if self.evader_translation_field is not None:
             self._set_vehicle_pose(
                 self.evader_node,
@@ -217,17 +282,22 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
                 pose.heading,
                 z=0.45,
             )
+        if self.randomize_obstacles or self.enriched_random_obstacles:
+            self._randomize_obstacle_poses()
+        self._refresh_pursuer_obstacle_cache()
+
+        pursuer_spawn_xy = self._pursuer_spawn_xy_for_episode(evader_spawn_xy, np.array(pose.pursuer_xy, dtype=np.float32))
+        pursuer_spawn_heading = self._pursuer_spawn_heading(pose.heading)
         if self.pursuer_translation_field is not None:
             self._set_vehicle_pose(
                 self.pursuer_node,
                 self.pursuer_translation_field,
                 self.pursuer_rotation_field,
-                pose.pursuer_xy,
-                pose.heading,
+                (float(pursuer_spawn_xy[0]), float(pursuer_spawn_xy[1])),
+                pursuer_spawn_heading,
                 z=0.55,
             )
-        if self.randomize_obstacles or self.enriched_random_obstacles:
-            self._randomize_obstacle_poses()
+        self._reset_pursuer_limited_info_state()
 
         self.driver.setGear(1)
         self.driver.setCruisingSpeed(0.0)
@@ -359,6 +429,13 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
             "obstacle_turn_direction": float(self.obstacle_turn_direction),
             "obstacle_safety_active": obstacle_safety_active,
             "obstacle_safety_action_delta": self.obstacle_safety_action_delta,
+            "pursuer_avoidance_active": float(self.pursuer_avoidance_active),
+            "pursuer_avoidance_obstacle_count": float(self.pursuer_avoidance_obstacle_count),
+            "pursuer_behavior_limited": float(self.pursuer_behavior_mode == "limited_info_patrol"),
+            "pursuer_line_of_sight": float(self.pursuer_line_of_sight),
+            "pursuer_info_mode": float(self.pursuer_info_mode),
+            "pursuer_hint_refresh": float(self.pursuer_hint_refresh),
+            "pursuer_hint_age_seconds": float(self._pursuer_hint_age_seconds()),
         }
         if self.show_reward_display and self.step_count % self.reward_display_interval == 0:
             self._draw_reward_label(reward, info)
@@ -435,6 +512,7 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
             self.pursuer_translation_field = self.pursuer_node.getField("translation")
             self.pursuer_rotation_field = self.pursuer_node.getField("rotation")
         self._collect_random_obstacles()
+        self._collect_pursuer_obstacles()
 
     def _device_by_name(self, names: tuple[str, ...]):
         for name in names:
@@ -473,6 +551,61 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
             return SpawnPose((0.0, 0.0), pursuer_offset, base_pose.heading)
         return self.spawn_poses[0]
 
+    def _pursuer_spawn_xy_for_episode(self, evader_xy: np.ndarray, fallback_xy: np.ndarray) -> np.ndarray:
+        if not self.pursuer_random_spawn:
+            return fallback_xy
+
+        min_x, max_x, min_y, max_y = self.pursuer_random_spawn_bounds
+        best_xy: np.ndarray | None = None
+        best_clearance = -float("inf")
+        for _ in range(500):
+            xy = np.array(
+                [
+                    self.np_random.uniform(min_x, max_x),
+                    self.np_random.uniform(min_y, max_y),
+                ],
+                dtype=np.float32,
+            )
+            if self._distance(xy, evader_xy) < self.pursuer_random_spawn_min_evader_distance:
+                continue
+            clearance = self._pursuer_spawn_clearance(xy)
+            if clearance > best_clearance:
+                best_clearance = clearance
+                best_xy = xy
+            if clearance >= self.pursuer_random_spawn_obstacle_margin:
+                return xy
+
+        if best_xy is not None:
+            return best_xy
+        return fallback_xy
+
+    def _pursuer_spawn_clearance(self, xy: np.ndarray) -> float:
+        if not self.pursuer_obstacle_cache:
+            return float("inf")
+        clearance = float("inf")
+        for obstacle in self.pursuer_obstacle_cache:
+            clearance = min(clearance, self._point_to_world_footprint_distance(xy, obstacle))
+        return clearance
+
+    def _pursuer_spawn_heading(self, fallback_heading: float) -> float:
+        if not self.pursuer_random_spawn:
+            return fallback_heading
+        return float(self.np_random.uniform(-math.pi, math.pi))
+
+    def _reset_pursuer_limited_info_state(self) -> None:
+        pursuer_xy = self._pursuer_xy()
+        evader_xy = self._evader_xy()
+        direct_unit = self._unit_or_none(evader_xy - pursuer_xy)
+        heading_unit = self._pursuer_heading_unit(np.array([1.0, 0.0], dtype=np.float32))
+        seed_unit = direct_unit if direct_unit is not None else heading_unit
+        self.pursuer_hint_unit = seed_unit.astype(np.float32)
+        self.pursuer_search_unit = seed_unit.astype(np.float32)
+        self.pursuer_last_hint_step = -self._steps_for_seconds(self.pursuer_limited_info_update_seconds)
+        self.pursuer_last_patrol_step = -self._steps_for_seconds(self.pursuer_limited_info_patrol_update_seconds)
+        self.pursuer_line_of_sight = False
+        self.pursuer_info_mode = 0
+        self.pursuer_hint_refresh = False
+
     def _set_vehicle_pose(
         self,
         node: Any,
@@ -500,6 +633,79 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         if self.randomize_all_buildings:
             self._collect_random_building_nodes(seen_node_ids)
 
+    def _collect_pursuer_obstacles(self) -> None:
+        self.pursuer_obstacles = []
+        self.pursuer_obstacle_cache = []
+        seen_node_ids: set[int] = set()
+        for node, translation_field, rotation_field, _z, label, footprint in self.random_obstacles:
+            if self._is_randomizable_building_node(node):
+                self._add_pursuer_obstacle_node(node, translation_field, rotation_field, footprint, label, seen_node_ids)
+
+        root = self._root_node()
+        if root is not None:
+            self._collect_pursuer_obstacles_from_field(root.getField("children"), seen_node_ids)
+        self._refresh_pursuer_obstacle_cache()
+
+    def _collect_pursuer_obstacles_from_field(self, field: Any | None, seen_node_ids: set[int]) -> None:
+        if field is None:
+            return
+        try:
+            count = field.getCount()
+        except Exception:
+            return
+        for index in range(count):
+            try:
+                child = field.getMFNode(index)
+            except Exception:
+                continue
+            if self._is_randomizable_building_node(child):
+                translation_field = child.getField("translation")
+                if translation_field is not None:
+                    rotation_field = child.getField("rotation")
+                    self._add_pursuer_obstacle_node(
+                        child,
+                        translation_field,
+                        rotation_field,
+                        self._obstacle_footprint(child, self._node_type_name(child)),
+                        self._node_type_name(child),
+                        seen_node_ids,
+                    )
+            for child_field_name in ("children",):
+                try:
+                    child_field = child.getField(child_field_name)
+                except Exception:
+                    child_field = None
+                self._collect_pursuer_obstacles_from_field(child_field, seen_node_ids)
+
+    def _add_pursuer_obstacle_node(
+        self,
+        node: Any,
+        translation_field: Any,
+        rotation_field: Any | None,
+        footprint: ObstacleFootprint,
+        label: str,
+        seen_node_ids: set[int],
+    ) -> None:
+        node_id = id(node)
+        if node_id in seen_node_ids:
+            return
+        seen_node_ids.add(node_id)
+        self.pursuer_obstacles.append((node, translation_field, rotation_field, footprint, label))
+
+    def _refresh_pursuer_obstacle_cache(self) -> None:
+        self.pursuer_obstacle_cache = []
+        for _node, translation_field, rotation_field, footprint, label in self.pursuer_obstacles:
+            try:
+                values = translation_field.getSFVec3f()
+            except Exception:
+                continue
+            xy = np.array([values[0], values[1]], dtype=np.float32)
+            if not np.all(np.isfinite(xy)):
+                continue
+            yaw = self._rotation_field_yaw(rotation_field)
+            vertices = self._world_footprint_vertices(xy, yaw, footprint)
+            self.pursuer_obstacle_cache.append(WorldFootprint(xy, footprint.radius, label, vertices))
+
     def _add_random_obstacle_node(self, node: Any, seen_node_ids: set[int], label: str) -> None:
         node_id = id(node)
         if node_id in seen_node_ids:
@@ -514,8 +720,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         except Exception:
             z = 0.0
         seen_node_ids.add(node_id)
-        footprint_radius = self._obstacle_footprint_radius(node, label)
-        self.random_obstacles.append((node, translation_field, rotation_field, z, label, footprint_radius))
+        footprint = self._obstacle_footprint(node, label)
+        self.random_obstacles.append((node, translation_field, rotation_field, z, label, footprint))
 
     def _collect_random_building_nodes(self, seen_node_ids: set[int]) -> None:
         root = self._root_node()
@@ -572,53 +778,100 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
                 continue
         return ""
 
-    def _obstacle_footprint_radius(self, node: Any, label: str) -> float:
-        corners_radius = self._corners_footprint_radius(node)
-        if corners_radius is not None:
-            return corners_radius
+    def _obstacle_footprint(self, node: Any, label: str) -> ObstacleFootprint:
+        type_name = self._node_type_name(node)
+
+        corners = self._corners_footprint_vertices(node)
+        if corners:
+            return self._polygon_footprint(corners)
 
         length = self._float_field_value(node, "length")
         width = self._float_field_value(node, "width")
         if length is not None and width is not None:
-            return 0.5 * math.hypot(length, width)
+            return self._rectangle_footprint(length, width)
 
-        type_name = self._node_type_name(node)
+        override = self._building_footprint_override(type_name)
+        if override is not None:
+            return override
+
         if type_name == "TrafficCone":
-            return 0.8
+            return ObstacleFootprint(0.8)
         if label == "STONES":
-            return 15.0
+            return ObstacleFootprint(15.0)
         if type_name == "SimpleBuilding":
-            return 12.0
-        if type_name in {
-            "BuildingUnderConstruction",
-            "CommercialBuilding",
-            "UBuilding",
-            "HollowBuilding",
-            "Hotel",
-            "TheThreeTowers",
-            "CyberboticsTower",
-            "BigGlassTower",
-            "Auditorium",
-            "Museum",
-            "ResidentialBuilding",
-            "FastFoodRestaurant",
-        }:
-            return 14.0
-        return 6.0
+            return ObstacleFootprint(12.0)
+        building_radius = self._building_radius_fallback(type_name)
+        if building_radius is not None:
+            return ObstacleFootprint(building_radius)
+        return ObstacleFootprint(6.0)
 
-    def _corners_footprint_radius(self, node: Any) -> float | None:
+    @staticmethod
+    def _building_footprint_override(type_name: str) -> ObstacleFootprint | None:
+        rectangles = {
+            "TheThreeTowers": (58.0, 16.0),
+            "Auditorium": (48.0, 34.0),
+        }
+        dimensions = rectangles.get(type_name)
+        if dimensions is None:
+            return None
+        length, width = dimensions
+        half_length = length * 0.5
+        half_width = width * 0.5
+        vertices = (
+            (-half_length, -half_width),
+            (half_length, -half_width),
+            (half_length, half_width),
+            (-half_length, half_width),
+        )
+        return ObstacleFootprint(0.5 * math.hypot(length, width), vertices)
+
+    @staticmethod
+    def _building_radius_fallback(type_name: str) -> float | None:
+        return {
+            "Museum": 24.0,
+            "UBuilding": 22.0,
+            "HollowBuilding": 22.0,
+            "CommercialBuilding": 18.0,
+            "BuildingUnderConstruction": 18.0,
+            "Hotel": 18.0,
+            "CyberboticsTower": 18.0,
+            "BigGlassTower": 18.0,
+            "ResidentialBuilding": 16.0,
+            "FastFoodRestaurant": 10.0,
+        }.get(type_name)
+
+    @staticmethod
+    def _rectangle_footprint(length: float, width: float) -> ObstacleFootprint:
+        half_length = max(float(length), 0.1) * 0.5
+        half_width = max(float(width), 0.1) * 0.5
+        return ObstacleFootprint(
+            math.hypot(half_length, half_width),
+            (
+                (-half_length, -half_width),
+                (half_length, -half_width),
+                (half_length, half_width),
+                (-half_length, half_width),
+            ),
+        )
+
+    @staticmethod
+    def _polygon_footprint(vertices: tuple[tuple[float, float], ...]) -> ObstacleFootprint:
+        radius = max(math.hypot(x, y) for x, y in vertices)
+        return ObstacleFootprint(max(radius, 0.1), vertices)
+
+    def _corners_footprint_vertices(self, node: Any) -> tuple[tuple[float, float], ...]:
         try:
             corners_field = node.getField("corners")
         except Exception:
             corners_field = None
         if corners_field is None:
-            return None
+            return ()
         try:
             count = corners_field.getCount()
         except Exception:
-            return None
+            return ()
 
-        max_radius = 0.0
+        vertices: list[tuple[float, float]] = []
         for index in range(count):
             corner = None
             for method_name in ("getMFVec2f", "getMFVec3f"):
@@ -632,8 +885,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
                     continue
             if corner is None or len(corner) < 2:
                 continue
-            max_radius = max(max_radius, math.hypot(float(corner[0]), float(corner[1])))
-        return max_radius if max_radius > 0.0 else None
+            vertices.append((float(corner[0]), float(corner[1])))
+        return tuple(vertices) if len(vertices) >= 3 else ()
 
     def _float_field_value(self, node: Any, field_name: str) -> float | None:
         try:
@@ -656,11 +909,12 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         if not self.random_obstacles:
             return
 
-        placed: list[np.ndarray] = []
-        for node, translation_field, rotation_field, z, _label, _footprint_radius in self.random_obstacles:
-            xy = self._sample_random_obstacle_xy(placed)
-            placed.append(xy)
+        placed: list[WorldFootprint] = []
+        obstacles = sorted(self.random_obstacles, key=lambda obstacle: obstacle[5].radius, reverse=True)
+        for node, translation_field, rotation_field, z, label, footprint in obstacles:
             yaw = float(self.np_random.uniform(-math.pi, math.pi))
+            xy = self._sample_random_obstacle_xy(placed, footprint, yaw)
+            placed.append(self._world_footprint(xy, yaw, footprint, label))
             self._set_random_obstacle_pose(node, translation_field, rotation_field, z, xy, yaw)
 
         if self.enriched_random_obstacles:
@@ -700,12 +954,12 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         left = np.array([-math.sin(heading), math.cos(heading)], dtype=np.float32)
 
         for candidate_index, slot in zip(indices, slots):
-            node, translation_field, rotation_field, z, _label, footprint_radius = candidates[int(candidate_index)]
-            world_xy = self._enriched_slot_position(evader_xy, forward, left, slot, footprint_radius)
+            node, translation_field, rotation_field, z, _label, footprint = candidates[int(candidate_index)]
+            world_xy = self._enriched_slot_position(evader_xy, forward, left, slot, footprint.radius)
             yaw = heading + float(self.np_random.uniform(-0.35, 0.35))
             self._set_random_obstacle_pose(node, translation_field, rotation_field, z, world_xy, yaw)
 
-    def _enriched_random_candidates(self) -> list[tuple[Any, Any, Any | None, float, str, float]]:
+    def _enriched_random_candidates(self) -> list[tuple[Any, Any, Any | None, float, str, ObstacleFootprint]]:
         if not self.enriched_random_obstacle_def_names:
             return list(self.random_obstacles)
 
@@ -745,42 +999,426 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         forward_jitter = float(self.np_random.uniform(-self.enriched_random_jitter, self.enriched_random_jitter))
         return evader_xy + forward * (2.0 + forward_jitter) + left * (side_sign * side_distance)
 
-    def _sample_random_obstacle_xy(self, placed: list[np.ndarray]) -> np.ndarray:
+    def _sample_random_obstacle_xy(
+        self,
+        placed: list[WorldFootprint],
+        footprint: ObstacleFootprint,
+        yaw: float,
+    ) -> np.ndarray:
         min_x, max_x, min_y, max_y = self.random_obstacle_bounds
+        edge_margin = footprint.radius + self.random_obstacle_edge_spacing
+        sample_min_x, sample_max_x = self._shrunk_axis_bounds(min_x, max_x, edge_margin)
+        sample_min_y, sample_max_y = self._shrunk_axis_bounds(min_y, max_y, edge_margin)
+        best_xy: np.ndarray | None = None
+        best_score = -float("inf")
         for _ in range(500):
             xy = np.array(
                 [
-                    self.np_random.uniform(min_x, max_x),
-                    self.np_random.uniform(min_y, max_y),
+                    self.np_random.uniform(sample_min_x, sample_max_x),
+                    self.np_random.uniform(sample_min_y, sample_max_y),
                 ],
                 dtype=np.float32,
             )
-            if np.linalg.norm(xy - self.random_obstacle_exclusion_center) < self.random_obstacle_exclusion_radius:
-                continue
-            if any(np.linalg.norm(xy - other) < self.random_obstacle_min_spacing for other in placed):
+            candidate = self._world_footprint(xy, yaw, footprint, "")
+            score = self._random_obstacle_placement_score(candidate, placed)
+            if score > best_score:
+                best_score = score
+                best_xy = xy
+            if score < 0.0:
                 continue
             return xy
 
-        return np.array([min_x, min_y], dtype=np.float32)
+        if best_xy is not None:
+            return best_xy
+        return np.array([sample_min_x, sample_min_y], dtype=np.float32)
+
+    def _random_obstacle_placement_score(self, candidate: WorldFootprint, placed: list[WorldFootprint]) -> float:
+        spawn_clearance = self._point_to_world_footprint_distance(
+            self.random_obstacle_exclusion_center,
+            candidate,
+        ) - self.random_obstacle_exclusion_radius - self.random_obstacle_edge_spacing
+        score = spawn_clearance
+        for other in placed:
+            center_clearance = float(np.linalg.norm(candidate.center - other.center)) - self.random_obstacle_min_spacing
+            body_clearance = self._world_footprint_distance(candidate, other) - self.random_obstacle_edge_spacing
+            score = min(score, center_clearance, body_clearance)
+        return score
+
+    @staticmethod
+    def _shrunk_axis_bounds(min_value: float, max_value: float, margin: float) -> tuple[float, float]:
+        if max_value - min_value <= 2.0 * margin:
+            return min_value, max_value
+        return min_value + margin, max_value - margin
+
+    def _world_footprint(self, center: np.ndarray, yaw: float, footprint: ObstacleFootprint, label: str) -> WorldFootprint:
+        return WorldFootprint(
+            center=np.asarray(center, dtype=np.float32),
+            radius=footprint.radius,
+            label=label,
+            vertices=self._world_footprint_vertices(center, yaw, footprint),
+        )
+
+    @staticmethod
+    def _world_footprint_vertices(center: np.ndarray, yaw: float, footprint: ObstacleFootprint) -> np.ndarray | None:
+        if not footprint.vertices:
+            return None
+        local = np.asarray(footprint.vertices, dtype=np.float32)
+        cos_yaw = math.cos(yaw)
+        sin_yaw = math.sin(yaw)
+        rotation = np.array([[cos_yaw, -sin_yaw], [sin_yaw, cos_yaw]], dtype=np.float32)
+        return local @ rotation.T + np.asarray(center, dtype=np.float32)
+
+    def _point_to_world_footprint_distance(self, point: np.ndarray, obstacle: WorldFootprint) -> float:
+        point = np.asarray(point, dtype=np.float32)
+        if obstacle.vertices is not None and len(obstacle.vertices) >= 3:
+            return self._point_to_polygon_distance(point, obstacle.vertices)
+        return max(0.0, float(np.linalg.norm(point - obstacle.center)) - obstacle.radius)
+
+    def _world_footprint_distance(self, first: WorldFootprint, second: WorldFootprint) -> float:
+        if first.vertices is not None and second.vertices is not None:
+            return self._polygon_distance(first.vertices, second.vertices)
+        if first.vertices is not None:
+            return max(0.0, self._point_to_polygon_distance(second.center, first.vertices) - second.radius)
+        if second.vertices is not None:
+            return max(0.0, self._point_to_polygon_distance(first.center, second.vertices) - first.radius)
+        return max(0.0, float(np.linalg.norm(first.center - second.center)) - first.radius - second.radius)
+
+    def _segment_to_world_footprint_distance(
+        self,
+        start: np.ndarray,
+        end: np.ndarray,
+        obstacle: WorldFootprint,
+    ) -> float:
+        if obstacle.vertices is not None and len(obstacle.vertices) >= 3:
+            return self._segment_to_polygon_distance(start, end, obstacle.vertices)
+        return max(0.0, self._point_segment_distance(obstacle.center, start, end) - obstacle.radius)
+
+    def _point_to_polygon_distance(self, point: np.ndarray, polygon: np.ndarray) -> float:
+        if self._point_in_polygon(point, polygon):
+            return 0.0
+        min_distance = float("inf")
+        for start, end in self._polygon_edges(polygon):
+            min_distance = min(min_distance, self._point_segment_distance(point, start, end))
+        return min_distance
+
+    def _polygon_distance(self, first: np.ndarray, second: np.ndarray) -> float:
+        if self._polygons_intersect(first, second):
+            return 0.0
+        min_distance = float("inf")
+        for vertex in first:
+            min_distance = min(min_distance, self._point_to_polygon_distance(vertex, second))
+        for vertex in second:
+            min_distance = min(min_distance, self._point_to_polygon_distance(vertex, first))
+        return min_distance
+
+    def _segment_to_polygon_distance(self, start: np.ndarray, end: np.ndarray, polygon: np.ndarray) -> float:
+        if self._point_in_polygon(start, polygon) or self._point_in_polygon(end, polygon):
+            return 0.0
+        for edge_start, edge_end in self._polygon_edges(polygon):
+            if self._segments_intersect(start, end, edge_start, edge_end):
+                return 0.0
+        min_distance = min(
+            self._point_to_polygon_distance(start, polygon),
+            self._point_to_polygon_distance(end, polygon),
+        )
+        for edge_start, edge_end in self._polygon_edges(polygon):
+            min_distance = min(min_distance, self._segment_distance(start, end, edge_start, edge_end))
+        return min_distance
+
+    @staticmethod
+    def _polygon_edges(polygon: np.ndarray):
+        for index in range(len(polygon)):
+            yield polygon[index], polygon[(index + 1) % len(polygon)]
+
+    @staticmethod
+    def _point_in_polygon(point: np.ndarray, polygon: np.ndarray) -> bool:
+        x = float(point[0])
+        y = float(point[1])
+        inside = False
+        previous = polygon[-1]
+        for current in polygon:
+            xi, yi = float(current[0]), float(current[1])
+            xj, yj = float(previous[0]), float(previous[1])
+            crosses = (yi > y) != (yj > y)
+            if crosses:
+                denominator = yj - yi
+                if abs(denominator) <= 1e-12:
+                    previous = current
+                    continue
+                x_at_y = (xj - xi) * (y - yi) / denominator + xi
+                if x < x_at_y:
+                    inside = not inside
+            previous = current
+        return inside
+
+    def _polygons_intersect(self, first: np.ndarray, second: np.ndarray) -> bool:
+        if any(self._point_in_polygon(vertex, second) for vertex in first):
+            return True
+        if any(self._point_in_polygon(vertex, first) for vertex in second):
+            return True
+        for first_start, first_end in self._polygon_edges(first):
+            for second_start, second_end in self._polygon_edges(second):
+                if self._segments_intersect(first_start, first_end, second_start, second_end):
+                    return True
+        return False
+
+    @staticmethod
+    def _segments_intersect(first_start: np.ndarray, first_end: np.ndarray, second_start: np.ndarray, second_end: np.ndarray) -> bool:
+        def orientation(a: np.ndarray, b: np.ndarray, c: np.ndarray) -> float:
+            return float((b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]))
+
+        def on_segment(a: np.ndarray, b: np.ndarray, c: np.ndarray) -> bool:
+            return (
+                min(float(a[0]), float(c[0])) - 1e-9 <= float(b[0]) <= max(float(a[0]), float(c[0])) + 1e-9
+                and min(float(a[1]), float(c[1])) - 1e-9 <= float(b[1]) <= max(float(a[1]), float(c[1])) + 1e-9
+            )
+
+        o1 = orientation(first_start, first_end, second_start)
+        o2 = orientation(first_start, first_end, second_end)
+        o3 = orientation(second_start, second_end, first_start)
+        o4 = orientation(second_start, second_end, first_end)
+        if o1 * o2 < 0.0 and o3 * o4 < 0.0:
+            return True
+        if abs(o1) <= 1e-9 and on_segment(first_start, second_start, first_end):
+            return True
+        if abs(o2) <= 1e-9 and on_segment(first_start, second_end, first_end):
+            return True
+        if abs(o3) <= 1e-9 and on_segment(second_start, first_start, second_end):
+            return True
+        if abs(o4) <= 1e-9 and on_segment(second_start, first_end, second_end):
+            return True
+        return False
+
+    def _segment_distance(self, first_start: np.ndarray, first_end: np.ndarray, second_start: np.ndarray, second_end: np.ndarray) -> float:
+        if self._segments_intersect(first_start, first_end, second_start, second_end):
+            return 0.0
+        return min(
+            self._point_segment_distance(first_start, second_start, second_end),
+            self._point_segment_distance(first_end, second_start, second_end),
+            self._point_segment_distance(second_start, first_start, first_end),
+            self._point_segment_distance(second_end, first_start, first_end),
+        )
+
+    def _rotation_field_yaw(self, rotation_field: Any | None) -> float:
+        if rotation_field is None:
+            return 0.0
+        try:
+            rotation = rotation_field.getSFRotation()
+        except Exception:
+            return 0.0
+        axis_z = float(rotation[2])
+        angle = float(rotation[3])
+        return angle if axis_z >= 0.0 else -angle
 
     def _move_pursuer(self) -> None:
         if self.pursuer_translation_field is None or self.pursuer_rotation_field is None:
             return
         pursuer_xy = self._pursuer_xy()
         evader_xy = self._evader_xy()
-        direction = evader_xy - pursuer_xy
-        distance = float(np.linalg.norm(direction))
-        if distance < 1e-6:
+        guidance_unit, knows_exact_position = self._pursuer_guidance_unit(pursuer_xy, evader_xy)
+        if guidance_unit is None:
             return
 
         dt = (self.timestep * self.action_repeat) / 1000.0
-        step = min(distance, self.pursuer_speed_mps * dt)
-        unit = direction / distance
-        next_xy = pursuer_xy + unit * step
+        step = self.pursuer_speed_mps * dt
+        if knows_exact_position:
+            step = min(self._distance(pursuer_xy, evader_xy), step)
+        next_xy, unit = self._pursuer_collision_avoidance_step(pursuer_xy, evader_xy, guidance_unit, step)
+        movement = next_xy - pursuer_xy
+        movement_norm = float(np.linalg.norm(movement))
+        if movement_norm > 1e-6:
+            unit = movement / movement_norm
+        else:
+            unit = self._pursuer_heading_unit(guidance_unit)
         heading = math.atan2(float(unit[1]), float(unit[0]))
         current = self.pursuer_translation_field.getSFVec3f()
         self.pursuer_translation_field.setSFVec3f([float(next_xy[0]), float(next_xy[1]), current[2]])
         self.pursuer_rotation_field.setSFRotation([0.0, 0.0, 1.0, heading])
+
+    def _pursuer_heading_unit(self, fallback: np.ndarray) -> np.ndarray:
+        if self.pursuer_rotation_field is None:
+            return fallback
+        try:
+            rotation = self.pursuer_rotation_field.getSFRotation()
+        except Exception:
+            return fallback
+        axis_z = float(rotation[2])
+        angle = float(rotation[3])
+        heading = angle if axis_z >= 0.0 else -angle
+        return np.array([math.cos(heading), math.sin(heading)], dtype=np.float32)
+
+    def _pursuer_guidance_unit(self, pursuer_xy: np.ndarray, evader_xy: np.ndarray) -> tuple[np.ndarray | None, bool]:
+        direct_unit = self._unit_or_none(evader_xy - pursuer_xy)
+        if direct_unit is None:
+            return None, True
+
+        if self.pursuer_behavior_mode != "limited_info_patrol":
+            self.pursuer_line_of_sight = True
+            self.pursuer_info_mode = 0
+            self.pursuer_hint_refresh = False
+            return direct_unit, True
+
+        self.pursuer_line_of_sight = self._pursuer_has_line_of_sight(pursuer_xy, evader_xy)
+        if self.pursuer_line_of_sight:
+            self.pursuer_hint_unit = direct_unit.astype(np.float32)
+            self.pursuer_search_unit = direct_unit.astype(np.float32)
+            self.pursuer_last_hint_step = self.step_count
+            self.pursuer_info_mode = 1
+            self.pursuer_hint_refresh = False
+            return direct_unit, True
+
+        hint_interval = self._steps_for_seconds(self.pursuer_limited_info_update_seconds)
+        if self.step_count - self.pursuer_last_hint_step >= hint_interval:
+            noise = math.radians(
+                float(
+                    self.np_random.uniform(
+                        -self.pursuer_limited_info_direction_noise_degrees,
+                        self.pursuer_limited_info_direction_noise_degrees,
+                    )
+                )
+            )
+            self.pursuer_hint_unit = self._rotate_unit(direct_unit, noise)
+            self.pursuer_search_unit = self.pursuer_hint_unit.copy()
+            self.pursuer_last_hint_step = self.step_count
+            self.pursuer_last_patrol_step = self.step_count
+            self.pursuer_info_mode = 2
+            self.pursuer_hint_refresh = True
+            return self.pursuer_search_unit, False
+
+        patrol_interval = self._steps_for_seconds(self.pursuer_limited_info_patrol_update_seconds)
+        if self.step_count - self.pursuer_last_patrol_step >= patrol_interval:
+            turn = math.radians(
+                float(
+                    self.np_random.uniform(
+                        -self.pursuer_limited_info_patrol_turn_degrees,
+                        self.pursuer_limited_info_patrol_turn_degrees,
+                    )
+                )
+            )
+            patrol_unit = self._rotate_unit(self.pursuer_search_unit, turn)
+            blended = self._unit_or_none(0.85 * patrol_unit + 0.15 * self.pursuer_hint_unit)
+            self.pursuer_search_unit = patrol_unit if blended is None else blended.astype(np.float32)
+            self.pursuer_last_patrol_step = self.step_count
+
+        self.pursuer_info_mode = 3
+        self.pursuer_hint_refresh = False
+        return self.pursuer_search_unit, False
+
+    def _pursuer_has_line_of_sight(self, pursuer_xy: np.ndarray, evader_xy: np.ndarray) -> bool:
+        if not np.all(np.isfinite(pursuer_xy)) or not np.all(np.isfinite(evader_xy)):
+            return False
+        distance = self._distance(pursuer_xy, evader_xy)
+        if self.pursuer_line_of_sight_max_distance > 0.0 and distance > self.pursuer_line_of_sight_max_distance:
+            return False
+        for obstacle in self.pursuer_obstacle_cache:
+            if self._segment_to_world_footprint_distance(pursuer_xy, evader_xy, obstacle) < self.pursuer_line_of_sight_obstacle_margin:
+                return False
+        return True
+
+    def _pursuer_hint_age_seconds(self) -> float:
+        if self.pursuer_behavior_mode != "limited_info_patrol":
+            return 0.0
+        age_steps = max(self.step_count - self.pursuer_last_hint_step, 0)
+        return age_steps * (self.timestep * self.action_repeat) / 1000.0
+
+    def _steps_for_seconds(self, seconds: float) -> int:
+        step_seconds = max((self.timestep * self.action_repeat) / 1000.0, 1e-6)
+        return max(1, int(math.ceil(seconds / step_seconds)))
+
+    @staticmethod
+    def _rotate_unit(unit: np.ndarray, angle: float) -> np.ndarray:
+        cos_angle = math.cos(angle)
+        sin_angle = math.sin(angle)
+        return np.array(
+            [
+                float(unit[0]) * cos_angle - float(unit[1]) * sin_angle,
+                float(unit[0]) * sin_angle + float(unit[1]) * cos_angle,
+            ],
+            dtype=np.float32,
+        )
+
+    @staticmethod
+    def _point_segment_distance(point: np.ndarray, start: np.ndarray, end: np.ndarray) -> float:
+        segment = end - start
+        length_squared = float(np.dot(segment, segment))
+        if length_squared < 1e-9:
+            return float(np.linalg.norm(point - start))
+        t = float(np.clip(np.dot(point - start, segment) / length_squared, 0.0, 1.0))
+        closest = start + t * segment
+        return float(np.linalg.norm(point - closest))
+
+    def _pursuer_collision_avoidance_step(
+        self,
+        pursuer_xy: np.ndarray,
+        evader_xy: np.ndarray,
+        direct_unit: np.ndarray,
+        step: float,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        self.pursuer_avoidance_active = False
+        self.pursuer_avoidance_obstacle_count = 0
+        direct_next = pursuer_xy + direct_unit * step
+        if not self.pursuer_avoid_obstacles or not self.pursuer_obstacle_cache:
+            return direct_next, direct_unit
+
+        hit = self._pursuer_building_hit(direct_next, evader_xy)
+        if hit is None:
+            return direct_next, direct_unit
+
+        obstacle = hit
+        self.pursuer_avoidance_active = True
+        self.pursuer_avoidance_obstacle_count = 1
+
+        away = pursuer_xy - obstacle.center
+        away_norm = float(np.linalg.norm(away))
+        if away_norm < 1e-6:
+            away = -direct_unit
+            away_norm = float(np.linalg.norm(away))
+        away_unit = away / max(away_norm, 1e-6)
+        tangent = np.array([-away_unit[1], away_unit[0]], dtype=np.float32)
+        if float(np.dot(tangent, direct_unit)) < float(np.dot(-tangent, direct_unit)):
+            tangent = -tangent
+
+        candidate_units = (
+            self._unit_or_none(0.70 * direct_unit + 0.30 * tangent),
+            self._unit_or_none(0.45 * direct_unit + 0.55 * tangent),
+            self._unit_or_none(tangent),
+            self._unit_or_none(0.45 * direct_unit - 0.55 * tangent),
+            self._unit_or_none(-tangent),
+            self._unit_or_none(away_unit),
+        )
+        for candidate_unit in candidate_units:
+            if candidate_unit is None:
+                continue
+            candidate_xy = pursuer_xy + candidate_unit * step
+            if self._pursuer_building_hit(candidate_xy, evader_xy) is None:
+                return candidate_xy, candidate_unit
+
+        return pursuer_xy, direct_unit
+
+    @staticmethod
+    def _unit_or_none(vector: np.ndarray) -> np.ndarray | None:
+        norm = float(np.linalg.norm(vector))
+        if norm < 1e-6:
+            return None
+        return vector / norm
+
+    def _pursuer_building_hit(
+        self,
+        next_xy: np.ndarray,
+        evader_xy: np.ndarray,
+    ) -> WorldFootprint | None:
+        closest_hit: WorldFootprint | None = None
+        closest_clearance = float("inf")
+        for obstacle in self.pursuer_obstacle_cache:
+            if self._point_to_world_footprint_distance(evader_xy, obstacle) <= self.capture_distance:
+                continue
+            clearance = self._point_to_world_footprint_distance(next_xy, obstacle)
+            if clearance >= max(self.pursuer_obstacle_margin, 0.2):
+                continue
+            if clearance < closest_clearance:
+                closest_clearance = clearance
+                closest_hit = obstacle
+        return closest_hit
 
     def _observation(self) -> dict[str, np.ndarray]:
         evader_xy = self._evader_xy()
