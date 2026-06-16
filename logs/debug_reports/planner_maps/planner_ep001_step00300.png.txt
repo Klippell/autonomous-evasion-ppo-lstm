@@ -1,0 +1,6 @@
+grid_shape=(48, 61)
+cell_size=8.0
+inflation_padding=1.0
+obstacles_total=28
+obstacles_polygon=28
+obstacles_circle_fallback=0

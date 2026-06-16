@@ -10,7 +10,7 @@
     "pursuer_limited_info_patrol_update_seconds": 2.5,
     "pursuer_limited_info_patrol_turn_degrees": 35.0,
     "pursuer_line_of_sight_max_distance": 140.0,
-    "pursuer_line_of_sight_obstacle_margin": 2.0
+    "pursuer_line_of_sight_obstacle_margin": 1.0
   },
   "training": {
     "save_name": "evader_limited_info_patrol_ppo"

@@ -8,17 +8,6 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/road/protos/RoadIntersection.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/vehicles/protos/bmw/BmwX5.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/traffic/protos/CrossRoadsTrafficLight.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/BuildingUnderConstruction.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/CommercialBuilding.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/UBuilding.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/HollowBuilding.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/Hotel.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/CyberboticsTower.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/BigGlassTower.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/Museum.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/ResidentialBuilding.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/FastFoodRestaurant.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/buildings/protos/SimpleBuilding.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/advertising_board/protos/AdvertisingBoard.proto"
 IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/vehicles/protos/bmw/BmwX5Simple.proto"
 IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/vehicles/protos/citroen/CitroenCZeroSimple.proto"
@@ -103,8 +92,8 @@ WorldInfo {
   ]
 }
 Viewpoint {
-  orientation 0.04318498552920284 -0.9950248205725201 -0.08978119775023578 5.153963220671076
-  position -177.4857183582023 -33.82857347047829 332.3103386497748
+  orientation -0.4144338783580398 -0.02018327210562087 0.9098555907374665 3.2594084332528532
+  position 386.6662082787409 189.66207364154593 537.2160494445756
   near 1
   follow "evader"
   followType "None"
@@ -387,30 +376,30 @@ RoadIntersection {
   startRoadBorder FALSE
 }
 DEF Pursuer BmwX5 {
-  hidden position_0_0 -0.19863738323635982
-  hidden position2_0_0 -0.05465498929102779
-  hidden position_0_1 -0.030248654661895084
-  hidden position2_0_1 7.7448861317765365
-  hidden position_0_2 -100286.63227571634
-  hidden position_0_3 -101857.72008861453
-  hidden linearVelocity_0 -0.0020214092721698926 0.02571766968719836 0.08759130442309915
-  hidden angularVelocity_0 -0.052352787280885424 -0.00422163314950225 -2.0034155617247283e-05
-  hidden rotation_1 -0.02590966308416919 0.2600163078360196 0.9652565508807434 0.20573816815109788
-  hidden linearVelocity_1 -0.0016149476512765338 0.01844826824918553 0.7269617718188122
-  hidden angularVelocity_1 -0.05616357583118251 -0.004792681103537445 -3.20509800271472e-05
-  hidden rotation_2 0.015121398325228755 -0.999743644971482 -0.0168519331776812 4.8202502516477
-  hidden linearVelocity_2 -0.001568398676359014 0.01848753583561227 0.7268949073380745
-  hidden angularVelocity_2 -0.0562584534122621 -0.004483617834699083 -1.8215976875149448e-05
-  hidden rotation_3 -7.897288131482977e-19 -1 5.492211967284732e-17 0.02876910541361152
-  hidden linearVelocity_3 -0.0019338467842946814 0.02622096103457751 0.727885635040215
-  hidden angularVelocity_3 -0.07010697951536984 -0.0051640574746069446 -2.0387027394075066e-05
-  hidden rotation_4 1.1659274754620725e-25 -1 1.2359951647311807e-25 4.7705920275799425
-  hidden linearVelocity_4 -0.0019361352065377854 0.02626281694164909 0.7278278555616406
-  hidden angularVelocity_4 -0.07021887679711093 -0.005170143635802551 -2.039090560479859e-05
-  translation 29.82880071515664 109.18410894671207 0.31027792054751513
-  rotation -0.0009857895136977802 -0.0010988846716790954 -0.9999989103351629 1.517088799754774
+  hidden position_0_0 -0.19433943660255557
+  hidden position2_0_0 -0.05435582100139258
+  hidden position_0_1 -1.0000057890771392
+  hidden position2_0_1 7.74182636316383
+  hidden position_0_2 -100425.04041797691
+  hidden position_0_3 -101993.08618983522
+  hidden linearVelocity_0 -0.004100173701778208 0.023267169684577968 0.07980992855516116
+  hidden angularVelocity_0 -0.0458595306725407 -0.008460877377854814 -1.3766232173798424e-05
+  hidden rotation_1 -0.025736232023961185 0.2640251257204909 0.9641723805157913 0.20151347101833791
+  hidden linearVelocity_1 -0.003182093395311662 0.015608828045310587 0.7205578394955147
+  hidden angularVelocity_1 -0.05080100824650447 -0.009322887890815435 -4.3994865065645737e-05
+  hidden rotation_2 0.42256848155191995 -0.7735014721576106 -0.4723678132228251 4.567476590009461
+  hidden linearVelocity_2 -0.003259935335278089 0.015349995312072906 0.720570107850232
+  hidden angularVelocity_2 -0.04914604838510686 -0.009792775349383909 -7.682112669344263e-05
+  hidden rotation_3 7.901529731960437e-19 1 1.0564435454815355e-17 0.1492963972026668
+  hidden linearVelocity_3 -0.0039559833891501155 0.02512146056656695 0.7254981536611013
+  hidden angularVelocity_3 -0.06718595122332079 -0.010406789886791641 -1.2700716334948358e-05
+  hidden rotation_4 1.1660455296753868e-25 -0.9999999999999999 -8.279282502928624e-26 1.906616490274882
+  hidden linearVelocity_4 -0.003957823159165169 0.02513831380173482 0.7252124939249012
+  hidden angularVelocity_4 -0.06723027361488015 -0.010411015997394805 -1.2718080393146697e-05
+  translation -41.89481095271492 170.80889473712682 0.3108057103420317
+  rotation -0.0007919239340333562 -0.0010581493116489777 -0.9999991265878772 1.4789725852669824
   name "pursuer"
-  controller ""
+  controller "generic"
   sensorsSlotTop [
     Lidar {
       translation 0 0 0.35
@@ -880,34 +869,34 @@ StraightRoadSegment {
   length 69
 }
 DEF Evader BmwX5 {
-  hidden position_0_0 0.01318714555305573
-  hidden position2_0_0 4550232.623386876
-  hidden position_0_1 0.013510442993117293
-  hidden position2_0_1 4528425.578234732
-  hidden position_0_2 4133968.8073614123
-  hidden position_0_3 4333476.008520447
-  hidden position_0_9 0.5076377733879537
-  hidden position_0_10 0.9003425010421553
-  hidden linearVelocity_0 7.047743004559858 -0.6656434830791458 -0.0056471629177687836
-  hidden angularVelocity_0 0.02461875763088106 -0.006909616539540274 -0.03348684071803703
-  hidden rotation_1 -0.006523051390680234 -0.9892901892736319 -0.14581622408873562 0.09037649574668298
-  hidden linearVelocity_1 7.074762820515751 -0.7244756670691554 0.032567011827509755
-  hidden angularVelocity_1 1.911657935607502 18.758418802421545 0.033152042170562376
-  hidden rotation_2 -0.0067551037986391315 -0.999967365961955 0.004431205680110564 4.302696419737145
-  hidden linearVelocity_2 7.02143070005214 -0.7199698272134228 -0.07351597431214377
-  hidden angularVelocity_2 1.930216459956342 18.86907166802764 0.04770140384160683
-  hidden rotation_3 0 0.9999999999999999 0 2.7000149391580592
-  hidden linearVelocity_3 7.081312076650549 -0.6209133564879347 0.00022171369614055661
-  hidden angularVelocity_3 1.666149723235781 18.931144438077347 -0.11086469849845824
-  hidden rotation_4 0 0.9999999999999999 0 0.8012705290021279
-  hidden linearVelocity_4 7.026820263207882 -0.6162369037453103 -0.0007744838062864971
-  hidden angularVelocity_4 1.653444167440066 18.785341182223796 -0.11023595201457265
-  hidden translation_32 -0.04328724052466626 0.5513286833155233 -0.04858771895625458
-  hidden rotation_32 0.7466598432279097 -6.399262012220049e-17 -0.6652060421485011 0.27191876206000726
-  hidden translation_33 0.04184914797658523 0.9392694891334739 0.04697353344310795
-  hidden rotation_33 0.7466598432279095 0 -0.6652060421485013 0.4722388987646882
-  translation 62.2584757511985 77.19905907795258 0.3157473412417607
-  rotation -0.04639681810105178 -0.0671939322072194 -0.9966605795077026 0.08693216409309519
+  hidden position_0_0 1.5809011798814723e-05
+  hidden position2_0_0 4557172.83208865
+  hidden position_0_1 1.4977404512562982e-05
+  hidden position2_0_1 4535231.355765583
+  hidden position_0_2 4140859.753404092
+  hidden position_0_3 4340219.39183836
+  hidden position_0_9 0.6547528788011893
+  hidden position_0_10 1.1588050759048025
+  hidden linearVelocity_0 -9.105181904707075 0.04810850327872761 -0.00046818847821679377
+  hidden angularVelocity_0 -0.0032508495816232614 0.005853017283022307 0.00025699964713197924
+  hidden rotation_1 -7.904505899307576e-06 -0.9999999999665492 2.1025143865060485e-06 3.66153252483426
+  hidden linearVelocity_1 -9.110493821595007 0.047596276557131154 0.0002291336096765302
+  hidden angularVelocity_1 -0.12830531647338778 -24.422261937672864 -7.570363715984896e-05
+  hidden rotation_2 7.4887022562112124e-06 0.999999999971922 -2.745483650790132e-07 3.068302128758298
+  hidden linearVelocity_2 -9.111143732239274 0.04759780154849692 9.518681243810169e-05
+  hidden angularVelocity_2 -0.12827055453603542 -24.429904907897953 -7.492293740342241e-05
+  hidden rotation_3 0 -1 0 1.8749310717310637
+  hidden linearVelocity_3 -9.107544648687528 0.048074854043034236 -0.00015192521355792847
+  hidden angularVelocity_3 -0.12791387020944076 -24.349131019770553 0.0005932757423135551
+  hidden rotation_4 0 -1 0 3.956431468944988
+  hidden linearVelocity_4 -9.107947898246662 0.04807662010869469 -0.0002824081280206029
+  hidden angularVelocity_4 -0.12785708491253434 -24.350212020391254 0.0005989434471735462
+  hidden translation_32 -0.024885715926110663 0.8510642373191819 -0.0279329464476743
+  hidden rotation_32 0.7466598432279097 -6.672416864218795e-17 -0.6652060421485011 0.41903386747324495
+  hidden translation_33 0.1863581449620597 1.410174869548454 0.20917750965129278
+  hidden rotation_33 0.7466598432279097 -3.8843226775383796e-17 -0.6652060421485011 0.7307014736273378
+  translation -26.537754273567636 0.12116434744372141 0.3162821948506785
+  rotation 0.002384836533167713 1.0499070107260054e-05 0.9999971562181962 3.1364840384869828
   color 0 0 1
   name "evader"
   controller "<extern>"
@@ -1107,303 +1096,565 @@ DEF Evader BmwX5 {
 CrossRoadsTrafficLight {
   translation 45 -45 0
 }
-DEF RANDOM_BUILDING_0 BuildingUnderConstruction {
-  translation 125.67031860351563 91.73907470703125 0
-  rotation 0 0 1 -2.695268475401499
-}
-DEF RANDOM_BUILDING_1 CommercialBuilding {
-  translation 79.23355865478516 -122.4278335571289 0
-  rotation 0 0 1 0.3242057615220548
-}
-DEF RANDOM_BUILDING_1 CommercialBuilding {
-  translation 100.40872955322266 -36.88619613647461 0
-  rotation 0 0 1 2.5766013174084446
-  name "commercial building(1)"
-}
-DEF RANDOM_BUILDING_1 CommercialBuilding {
-  translation -116.99750518798828 76.55142211914063 0
-  rotation 0 0 1 -2.869957194888796
-  name "commercial building(2)"
-}
-DEF RANDOM_BUILDING_2 UBuilding {
-  translation 13.556561470031738 208.85018920898438 0
-  rotation 0 0 1 0.0741356455401192
-}
-DEF RANDOM_BUILDING_3 HollowBuilding {
-  translation 1.8417737483978271 100.46780395507813 0
-  rotation 0 0 1 1.7503377537508022
-}
-DEF RANDOM_BUILDING_4 Hotel {
-  translation -115.66912078857422 172.90554809570313 0
-  rotation 0 0 1 -3.03576082258226
-}
-DEF RANDOM_BUILDING_4 Hotel {
-  translation -83.19432067871094 208.82374572753906 0
-  rotation 0 0 1 -1.699378738326555
-  name "hotel(1)"
-}
-DEF RANDOM_BUILDING_4 Hotel {
-  translation 114.98284912109375 141.90066528320313 0
-  rotation 0 0 1 -2.551785403907469
-  name "hotel(2)"
-}
-DEF RANDOM_BUILDING_4 Hotel {
-  translation -36.2984619140625 173.3953094482422 0
-  rotation 0 0 1 -2.4007393099205814
-  name "hotel(3)"
-}
-DEF RANDOM_BUILDING_6 CyberboticsTower {
-  translation 121.88557434082031 -91.4454574584961 0
-  rotation 0 0 1 0.3205953458214976
-}
-DEF RANDOM_BUILDING_7 BigGlassTower {
-  translation 118.84125518798828 42.19981002807617 0
-  rotation 0 0 1 2.8097814465461086
-}
-DEF RANDOM_BUILDING_7 BigGlassTower {
-  translation -12.093725204467773 -91.08329772949219 0
-  rotation 0 0 1 0.8355329398861175
-  name "big glass tower(1)"
-}
-DEF RANDOM_BUILDING_7 BigGlassTower {
-  translation -110.07479095458984 -94.70822143554688 0
-  rotation 0 0 1 -0.19701017897113315
-  name "big glass tower(2)"
-}
-DEF RANDOM_BUILDING_7 BigGlassTower {
-  translation 15.304028511047363 -131.0504608154297 0
-  rotation 0 0 1 0.3839708123618024
-  name "big glass tower(3)"
-}
-DEF RANDOM_BUILDING_9 Museum {
-  translation -46.85429000854492 46.25146484375 0
-  rotation 0 0 1 1.4534837140941228
-}
-DEF RANDOM_BUILDING_9 Museum {
-  translation -54.84210205078125 -122.48846435546875 0
-  rotation 0 0 1 0.5575845665004491
-  name "museum(1)"
-}
-DEF RANDOM_BUILDING_9 Museum {
-  translation -50.66549301147461 -35.50888442993164 0
-  rotation 0 0 1 -1.5074406010819095
-  name "museum(2)"
-}
-DEF RANDOM_BUILDING_10 ResidentialBuilding {
-  translation -97.15834045410156 -51.457481384277344 0
-  rotation 0 0 1 -1.1853681325141063
-}
-DEF RANDOM_BUILDING_11 FastFoodRestaurant {
-  translation -87.05804443359375 59.810874938964844 0
-  rotation 0 0 1 -1.2867187697638562
-  height 4.3
-  length 13
-  width 12
-  brand "subway"
-  numberOfSides 2
-}
-DEF RANDOM_BUILDING_12 FastFoodRestaurant {
-  translation 36.68329620361328 25.592050552368164 0
-  rotation 0 0 1 1.3065316090311505
-  name "fast food restaurant(1)"
-  height 4.3
-  length 13
-  width 12
-  brand "subway"
-  numberOfSides 2
-}
-DEF RANDOM_BUILDING_13 SimpleBuilding {
-  translation -132.45599365234375 -57.38433837890625 0
-  rotation 0 0 1 0.6040956500911707
-  wallType "glass highrise"
-}
-DEF RANDOM_BUILDING_14 SimpleBuilding {
-  translation 7.3556132316589355 -58.26228332519531 0
-  rotation 0 0 1 2.4232094476500565
-  name "building(1)"
-  wallType "glass highrise"
-}
-DEF RANDOM_BUILDING_15 SimpleBuilding {
-  translation 131.84109497070313 -152.3748779296875 0
-  rotation 0 0 1 -1.273399047615382
-  name "building(2)"
-  floorHeight 5
-  wallType "brick building"
-  roofType "gravel"
-  roofShape "flat roof"
-}
-DEF RANDOM_BUILDING_16 SimpleBuilding {
-  translation -3.563262462615967 155.12867736816406 0
-  rotation 0 0 1 -2.3783135092506216
-  name "building(3)"
-  floorHeight 5
-  wallType "brick building"
-  roofType "gravel"
-  roofShape "flat roof"
-}
-DEF RANDOM_BUILDING_17 SimpleBuilding {
-  translation -88.73727416992188 -153.8043670654297 0
-  rotation 0 0 1 2.3331697991412286
-  name "building(4)"
-  floorHeight 5
-  wallType "brick building"
-  roofType "gravel"
-  roofShape "flat roof"
-}
-DEF RANDOM_BUILDING_18 SimpleBuilding {
-  translation -63.29351043701172 -79.94972229003906 0
-  rotation 0 0 1 3.0721828676659353
-  name "building(5)"
-  floorHeight 5
-  wallType "brick building"
-  roofType "gravel"
-  roofShape "flat roof"
-}
-DEF RANDOM_BUILDING_19 SimpleBuilding {
-  translation 55.13896942138672 220.11776733398438 0
-  rotation 0 0 1 -1.2489124688888467
-  name "building(6)"
-  wallType "glass highrise"
-}
-DEF RANDOM_BUILDING_20 SimpleBuilding {
-  translation 46.58489990234375 97.24445343017578 0
-  rotation 0 0 1 -0.05104355279220041
-  name "building(7)"
-  floorNumber 2
-  corners [
-    5 5
-    5 -5
-    -5 -5
-    -5 5
+DEF RANDOM_BUILDING_0 Solid {
+  translation 71.84944915771484 188.97328186035156 7
+  rotation 0 0 1 1.8239003980800375
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.72 0.36 0.26
+        roughness 0.75
+      }
+      geometry Box {
+        size 16 10 14
+      }
+    }
   ]
-  wallType "classic building"
+  name "random_building_0"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 16 10 14
+  }
 }
-DEF RANDOM_BUILDING_21 SimpleBuilding {
-  translation -88.23404693603516 -9.927775382995605 0
-  rotation 0 0 1 0.22100045576331695
-  name "building(8)"
-  floorNumber 2
-  corners [
-    5 5
-    5 -5
-    -5 -5
-    -5 5
+DEF RANDOM_BUILDING_1 Solid {
+  translation 160.6378173828125 -115.11054229736328 9
+  rotation 0 0 1 1.9486042805810735
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.58 0.58 0.56
+        roughness 0.75
+      }
+      geometry Box {
+        size 18 12 18
+      }
+    }
   ]
+  name "random_building_1"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 18 12 18
+  }
 }
-DEF RANDOM_BUILDING_22 SimpleBuilding {
-  translation 55.38218688964844 186.80499267578125 0
-  rotation 0 0 1 2.4510108878629717
-  name "building(9)"
-  floorNumber 6
-  corners [
-    0 0
-    -10 0
-    -10 -10
-    10 -10
-    10 20
-    0 20
+DEF RANDOM_BUILDING_2 Solid {
+  translation 104.88153076171875 1.6537829637527466 8
+  rotation 0 0 1 0.9930171615715562
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.54 0.58 0.6
+        roughness 0.75
+      }
+      geometry Box {
+        size 22 12 16
+      }
+    }
   ]
-  wallType "gray glass building"
-  roofType "gravel"
-  roofShape "flat roof"
+  name "random_building_2"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 22 12 16
+  }
 }
-DEF RANDOM_BUILDING_22 SimpleBuilding {
-  translation 131.353515625 219.4447479248047 0
-  rotation 0 0 1 -2.1473554439580265
-  name "building(2)"
-  floorNumber 6
-  corners [
-    0 0
-    -10 0
-    -10 -10
-    10 -10
-    10 20
-    0 20
+DEF RANDOM_BUILDING_3 Solid {
+  translation -41.95207214355469 -88.94471740722656 8
+  rotation 0 0 1 2.2470108367070347
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.5 0.52 0.54
+        roughness 0.75
+      }
+      geometry Box {
+        size 20 14 16
+      }
+    }
   ]
-  wallType "gray glass building"
-  roofType "gravel"
-  roofShape "flat roof"
+  name "random_building_3"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 20 14 16
+  }
 }
-DEF RANDOM_BUILDING_22 SimpleBuilding {
-  translation -132.63128662109375 -152.5969696044922 0
-  rotation 0 0 1 -2.4204614242477813
-  name "building(2)"
-  floorNumber 6
-  corners [
-    0 0
-    -10 0
-    -10 -10
-    10 -10
-    10 20
-    0 20
+DEF RANDOM_BUILDING_4 Solid {
+  translation 24.063234329223633 238.62991333007813 11
+  rotation 0 0 1 -0.5226398145542799
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.62 0.58 0.54
+        roughness 0.75
+      }
+      geometry Box {
+        size 16 16 22
+      }
+    }
   ]
-  wallType "gray glass building"
-  roofType "gravel"
-  roofShape "flat roof"
+  name "random_building_4"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 16 16 22
+  }
 }
-DEF RANDOM_BUILDING_22 SimpleBuilding {
-  translation 100.70404815673828 -153.2387237548828 0
-  rotation 0 0 1 -1.738187602712357
-  name "building(2)"
-  floorNumber 6
-  corners [
-    0 0
-    -10 0
-    -10 -10
-    10 -10
-    10 20
-    0 20
+DEF RANDOM_BUILDING_6 Solid {
+  translation -117.91837310791016 -110.88795471191406 16
+  rotation 0 0 1 -2.0226815853010516
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.45 0.52 0.6
+        roughness 0.75
+      }
+      geometry Box {
+        size 12 12 32
+      }
+    }
   ]
-  wallType "gray glass building"
-  roofType "gravel"
-  roofShape "flat roof"
+  name "random_building_6"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 12 12 32
+  }
 }
-DEF RANDOM_BUILDING_23 SimpleBuilding {
-  translation -23.362260818481445 133.4895477294922 0
-  rotation 0 0 1 1.7021676164038633
-  name "building(10)"
-  floorNumber 2
-  corners [
-    0 0
-    -10 0
-    -10 -10
-    10 -10
-    10 10
-    0 10
+DEF RANDOM_BUILDING_7 Solid {
+  translation 60.125797271728516 -117.23837280273438 14
+  rotation 0 0 1 2.492017313056169
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.4 0.48 0.56
+        roughness 0.75
+      }
+      geometry Box {
+        size 14 14 28
+      }
+    }
   ]
-  wallType "highrise"
+  name "random_building_7"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 14 14 28
+  }
 }
-DEF RANDOM_BUILDING_24 SimpleBuilding {
-  translation -29 1.1157245635986328 0
-  rotation 0 0 1 2.9338321257853743
-  name "building(11)"
-  floorNumber 2
-  corners [
-    5 5
-    5 -5
-    -5 -5
-    -5 5
+DEF RANDOM_BUILDING_9 Solid {
+  translation 120.1374282836914 248.14796447753906 9
+  rotation 0 0 1 1.9032251707062304
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.68 0.66 0.62
+        roughness 0.75
+      }
+      geometry Box {
+        size 24 14 18
+      }
+    }
   ]
-  wallType "factory building"
+  name "random_building_9"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 24 14 18
+  }
 }
-DEF RANDOM_BUILDING_25 SimpleBuilding {
-  translation 133.84446716308594 177.8378448486328 0
-  rotation 0 0 1 0.7320120584764807
-  name "building(12)"
-  floorNumber 2
-  corners [
-    5 5
-    5 -5
-    -5 -5
-    -5 5
+DEF RANDOM_BUILDING_10 Solid {
+  translation 55.08375930786133 -150.5818328857422 9
+  rotation 0 0 1 -2.2138799562200275
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.6 0.6 0.58
+        roughness 0.75
+      }
+      geometry Box {
+        size 14 12 18
+      }
+    }
   ]
-  wallType "tall house"
+  name "random_building_10"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 14 12 18
+  }
 }
-DEF RANDOM_BUILDING_26 SimpleBuilding {
-  translation -1.66758131980896 25 0
-  rotation 0 0 1 -2.8789548457299414
-  name "building(13)"
-  wallType "residential building"
+DEF RANDOM_BUILDING_11 Solid {
+  translation -22.583269119262695 -146.54612731933594 2.15
+  rotation 0 0 1 -0.15401652937307864
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.75 0.38 0.28
+        roughness 0.75
+      }
+      geometry Box {
+        size 13 12 4.3
+      }
+    }
+  ]
+  name "random_building_11"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 13 12 4.3
+  }
+}
+DEF RANDOM_BUILDING_12 Solid {
+  translation -132.5767364501953 -162.3267364501953 2.15
+  rotation 0 0 1 0.205820523977561
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.75 0.38 0.28
+        roughness 0.75
+      }
+      geometry Box {
+        size 13 12 4.3
+      }
+    }
+  ]
+  name "random_building_12"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 13 12 4.3
+  }
+}
+DEF RANDOM_BUILDING_13 Solid {
+  translation 149.89720153808594 53.9361572265625 13
+  rotation 0 0 1 2.939598247780709
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.42 0.5 0.58
+        roughness 0.75
+      }
+      geometry Box {
+        size 12 12 26
+      }
+    }
+  ]
+  name "random_building_13"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 12 12 26
+  }
+}
+DEF RANDOM_BUILDING_14 Solid {
+  translation 151.57015991210938 254.62294006347656 13
+  rotation 0 0 1 2.989504089073069
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.42 0.5 0.58
+        roughness 0.75
+      }
+      geometry Box {
+        size 12 12 26
+      }
+    }
+  ]
+  name "random_building_14"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 12 12 26
+  }
+}
+DEF RANDOM_BUILDING_15 Solid {
+  translation 46.60366439819336 214.48585510253906 10
+  rotation 0 0 1 -2.340506647194653
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.55 0.5 0.46
+        roughness 0.75
+      }
+      geometry Box {
+        size 16 10 20
+      }
+    }
+  ]
+  name "random_building_15"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 16 10 20
+  }
+}
+DEF RANDOM_BUILDING_16 Solid {
+  translation -62.72196578979492 163.90541076660156 10
+  rotation 0 0 1 -2.695129501479764
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.55 0.5 0.46
+        roughness 0.75
+      }
+      geometry Box {
+        size 16 10 20
+      }
+    }
+  ]
+  name "random_building_16"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 16 10 20
+  }
+}
+DEF RANDOM_BUILDING_17 Solid {
+  translation -109.69727325439453 -138.0169219970703 10
+  rotation 0 0 1 -1.1484714728517904
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.55 0.5 0.46
+        roughness 0.75
+      }
+      geometry Box {
+        size 16 10 20
+      }
+    }
+  ]
+  name "random_building_17"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 16 10 20
+  }
+}
+DEF RANDOM_BUILDING_18 Solid {
+  translation -68.42384338378906 41.44076919555664 10
+  rotation 0 0 1 -2.5657477743241155
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.55 0.5 0.46
+        roughness 0.75
+      }
+      geometry Box {
+        size 16 10 20
+      }
+    }
+  ]
+  name "random_building_18"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 16 10 20
+  }
+}
+DEF RANDOM_BUILDING_19 Solid {
+  translation -95.59929656982422 -72.75263977050781 13
+  rotation 0 0 1 -0.10121245897555875
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.42 0.5 0.58
+        roughness 0.75
+      }
+      geometry Box {
+        size 12 12 26
+      }
+    }
+  ]
+  name "random_building_19"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 12 12 26
+  }
+}
+DEF RANDOM_BUILDING_20 Solid {
+  translation 140.10826110839844 -171.7495880126953 4
+  rotation 0 0 1 -2.13464584320771
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.7 0.68 0.62
+        roughness 0.75
+      }
+      geometry Box {
+        size 10 10 8
+      }
+    }
+  ]
+  name "random_building_20"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 10 10 8
+  }
+}
+DEF RANDOM_BUILDING_21 Solid {
+  translation -74.93185424804688 236.9323272705078 4
+  rotation 0 0 1 -0.6196199414610959
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.7 0.68 0.62
+        roughness 0.75
+      }
+      geometry Box {
+        size 10 10 8
+      }
+    }
+  ]
+  name "random_building_21"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 10 10 8
+  }
+}
+DEF RANDOM_BUILDING_22 Solid {
+  translation -25.043792724609375 192.87216186523438 12
+  rotation 0 0 1 0.7374849434279835
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.48 0.54 0.58
+        roughness 0.75
+      }
+      geometry Box {
+        size 20 30 24
+      }
+    }
+  ]
+  name "random_building_22"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 20 30 24
+  }
+}
+DEF RANDOM_BUILDING_23 Solid {
+  translation -1.921074390411377 -27.142135620117188 4
+  rotation 0 0 1 2.940269067921253
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.6 0.62 0.66
+        roughness 0.75
+      }
+      geometry Box {
+        size 20 20 8
+      }
+    }
+  ]
+  name "random_building_23"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 20 20 8
+  }
+}
+DEF RANDOM_BUILDING_24 Solid {
+  translation -117.64176177978516 238.8042755126953 4
+  rotation 0 0 1 2.8067901545447764
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.62 0.58 0.52
+        roughness 0.75
+      }
+      geometry Box {
+        size 10 10 8
+      }
+    }
+  ]
+  name "random_building_24"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 10 10 8
+  }
+}
+DEF RANDOM_BUILDING_25 Solid {
+  translation -2.615273952484131 20.071067810058594 4
+  rotation 0 0 1 2.9737136299613383
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.62 0.58 0.52
+        roughness 0.75
+      }
+      geometry Box {
+        size 10 10 8
+      }
+    }
+  ]
+  name "random_building_25"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 10 10 8
+  }
+}
+DEF RANDOM_BUILDING_26 Solid {
+  translation -109.50568389892578 37.40301513671875 6
+  rotation 0 0 1 -1.8910086200905325
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.64 0.56 0.5
+        roughness 0.75
+      }
+      geometry Box {
+        size 14 12 12
+      }
+    }
+  ]
+  name "random_building_26"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 14 12 12
+  }
+}
+DEF RANDOM_BUILDING_27 Solid {
+  translation -85.26564025878906 -152.294921875 12
+  rotation 0 0 1 2.8743548309648768
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.48 0.54 0.58
+        roughness 0.75
+      }
+      geometry Box {
+        size 20 30 24
+      }
+    }
+  ]
+  name "random_building_27"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 20 30 24
+  }
+}
+DEF RANDOM_BUILDING_28 Solid {
+  translation 30.95677947998047 184.2688751220703 12
+  rotation 0 0 1 1.6199113732404697
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.48 0.54 0.58
+        roughness 0.75
+      }
+      geometry Box {
+        size 20 30 24
+      }
+    }
+  ]
+  name "random_building_28"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 20 30 24
+  }
+}
+DEF RANDOM_BUILDING_29 Solid {
+  translation 135.44102478027344 -40.90439224243164 12
+  rotation 0 0 1 -1.4340541832684732
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.48 0.54 0.58
+        roughness 0.75
+      }
+      geometry Box {
+        size 20 30 24
+      }
+    }
+  ]
+  name "random_building_29"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 20 30 24
+  }
 }
 AdvertisingBoard {
   translation 48.100535 -116.28367 0
@@ -1485,14 +1736,12 @@ Solid {
   }
 }
 DEF Pursuer_2 BmwX5Simple {
-  translation -85.01090240478516 -119.53240203857422 0.55
-  rotation 0 0 1 1.3354862843923183
+  translation 0 0 -1000
   color 1 0.29 0.2
   name "pursuer 2"
 }
 DEF Pursuer_3 BmwX5Simple {
-  translation 36.34855651855469 55.14435577392578 0.55
-  rotation 0 0 1 0.7110950954811055
+  translation 0 0 -1000
   color 1 0.23 0.28
   name "pursuer 3"
 }

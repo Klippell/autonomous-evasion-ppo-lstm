@@ -135,6 +135,22 @@ DEBUG_INFO_KEYS = (
     "pursuer_avoidance_side",
     "pursuer_avoidance_commit_steps_left",
     "pursuer_return_to_chase_steps_left",
+    "pursuer_contact_active",
+    "pursuer_contact_source",
+    "pursuer_contact_memory_steps_left",
+    "pursuer_x",
+    "pursuer_y",
+    "pursuer_next_x",
+    "pursuer_next_y",
+    "pursuer_move_x",
+    "pursuer_move_y",
+    "pursuer_move_distance",
+    "pursuer_heading",
+    "pursuer_guidance_x",
+    "pursuer_guidance_y",
+    "pursuer_knows_exact_position",
+    "pursuer_target_x",
+    "pursuer_target_y",
     "pursuer_lidar_avoidance_active",
     "pursuer_lidar_front_distance",
     "pursuer_lidar_left_distance",
@@ -403,6 +419,14 @@ class DebugReport:
             f"safe {int(float(row['obstacle_safety_active']))}/{float(row['obstacle_safety_action_delta']):.2f} "
             f"pAvoid {int(float(row['pursuer_avoidance_active']))}/{int(float(row['pursuer_avoidance_obstacle_count']))} "
             f"pSide {int(float(row['pursuer_avoidance_side']))}/{int(float(row['pursuer_avoidance_commit_steps_left']))} "
+            f"pContact {int(float(row['pursuer_contact_active']))}/{int(float(row['pursuer_contact_source']))}/"
+            f"{int(float(row['pursuer_contact_memory_steps_left']))} "
+            f"pMove {float(row['pursuer_move_x']):+.2f}/{float(row['pursuer_move_y']):+.2f}/"
+            f"{float(row['pursuer_move_distance']):.2f} "
+            f"pHead {float(row['pursuer_heading']):+.2f} "
+            f"pGuide {float(row['pursuer_guidance_x']):+.2f}/{float(row['pursuer_guidance_y']):+.2f}/"
+            f"{int(float(row['pursuer_knows_exact_position']))} "
+            f"pTarget {float(row['pursuer_target_x']):+.1f}/{float(row['pursuer_target_y']):+.1f} "
             f"pLid {int(float(row['pursuer_lidar_avoidance_active']))}/"
             f"{float(row['pursuer_lidar_front_distance']):.1f}/"
             f"{float(row['pursuer_lidar_left_distance']):.1f}/"
@@ -550,6 +574,22 @@ def parse_args() -> argparse.Namespace:
         default=100,
         help="Rolling step window used for debug-report terminal averages.",
     )
+    parser.add_argument(
+        "--export-planner-map",
+        action="store_true",
+        help="Export PNG snapshots of P's A* planner grid, current path, P, E, and target.",
+    )
+    parser.add_argument(
+        "--planner-map-dir",
+        default=None,
+        help="Directory for --export-planner-map snapshots. Defaults to logs/debug_reports/planner_maps.",
+    )
+    parser.add_argument(
+        "--planner-map-interval",
+        type=int,
+        default=250,
+        help="Export a planner map every N inference steps when --export-planner-map is enabled.",
+    )
     return parser.parse_args()
 
 
@@ -566,6 +606,20 @@ def _load_model(path: str, algorithm: str) -> tuple[BaseAlgorithm, str]:
 
     joined_errors = "\n".join(errors)
     raise RuntimeError(f"Could not load checkpoint with any known algorithm:\n{joined_errors}")
+
+
+def _export_planner_map(env: gym.Env, output_dir: str, episode: int, step: int) -> None:
+    unwrapped = env.unwrapped
+    exporter = getattr(unwrapped, "export_pursuer_planner_map", None)
+    if exporter is None:
+        return
+    os.makedirs(output_dir, exist_ok=True)
+    path = os.path.join(output_dir, f"planner_ep{episode:03d}_step{step:05d}.png")
+    try:
+        output_path = exporter(path)
+        print(f"Exported planner map: {output_path}")
+    except Exception as exc:
+        print(f"Planner map export failed: {exc}")
 
 
 def main() -> None:
@@ -619,7 +673,15 @@ def main() -> None:
             rolling_window=args.debug_report_window,
         )
 
+    planner_map_dir = args.planner_map_dir
+    if planner_map_dir is None:
+        planner_map_dir = os.path.join(PROJECT_ROOT, "logs", "debug_reports", "planner_maps")
+
     obs, _info = env.reset()
+    episode_index = 1
+    episode_step = 0
+    if args.export_planner_map:
+        _export_planner_map(env, planner_map_dir, episode_index, episode_step)
     is_recurrent = isinstance(model, RecurrentPPO)
     lstm_states = None
     episode_starts = np.ones((1,), dtype=bool)
@@ -639,12 +701,23 @@ def main() -> None:
                     deterministic=not args.stochastic,
                 )
             obs, reward, terminated, truncated, info = env.step(action)
+            episode_step += 1
             done = terminated or truncated
             if debug_report is not None:
                 debug_report.record(current_obs, action, reward, terminated, truncated, info)
+            if (
+                args.export_planner_map
+                and args.planner_map_interval > 0
+                and episode_step % args.planner_map_interval == 0
+            ):
+                _export_planner_map(env, planner_map_dir, episode_index, episode_step)
             if done:
                 lstm_states = None
                 obs, _info = env.reset()
+                episode_index += 1
+                episode_step = 0
+                if args.export_planner_map:
+                    _export_planner_map(env, planner_map_dir, episode_index, episode_step)
             if is_recurrent:
                 episode_starts = np.array([done], dtype=bool)
     except KeyboardInterrupt:

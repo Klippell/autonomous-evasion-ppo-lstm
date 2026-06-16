@@ -53,6 +53,22 @@ INFO_TENSORBOARD_KEYS = (
     "pursuer_avoidance_side",
     "pursuer_avoidance_commit_steps_left",
     "pursuer_return_to_chase_steps_left",
+    "pursuer_contact_active",
+    "pursuer_contact_source",
+    "pursuer_contact_memory_steps_left",
+    "pursuer_x",
+    "pursuer_y",
+    "pursuer_next_x",
+    "pursuer_next_y",
+    "pursuer_move_x",
+    "pursuer_move_y",
+    "pursuer_move_distance",
+    "pursuer_heading",
+    "pursuer_guidance_x",
+    "pursuer_guidance_y",
+    "pursuer_knows_exact_position",
+    "pursuer_target_x",
+    "pursuer_target_y",
     "pursuer_lidar_avoidance_active",
     "pursuer_lidar_front_distance",
     "pursuer_lidar_left_distance",
@@ -386,7 +402,7 @@ def _configure_training_logger(
     reset_num_timesteps: bool,
     enable_tensorboard: bool,
 ) -> Logger:
-    output_formats = [HumanOutputFormat(sys.stdout)]
+    output_formats = [HumanOutputFormat(sys.stdout, max_length=72)]
     run_dir: str | None = None
     if enable_tensorboard:
         tensorboard_root = os.path.join(log_dir, "tensorboard_logs")
@@ -410,6 +426,10 @@ def main() -> None:
     config = load_experiment_config(args.config)
     if args.algorithm is not None:
         config.setdefault("model", {})["algorithm"] = args.algorithm
+    if model_algorithm_from_config(config).lower() == "recurrent_ppo":
+        model_config = config.setdefault("model", {})
+        if str(model_config.get("policy", "MultiInputPolicy")) == "MultiInputPolicy":
+            model_config["policy"] = "MultiInputLstmPolicy"
     training_config = config.get("training", {})
     model_cls = _model_class_from_config(config)
     os.makedirs(args.log_dir, exist_ok=True)
