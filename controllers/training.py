@@ -69,11 +69,6 @@ INFO_TENSORBOARD_KEYS = (
     "pursuer_knows_exact_position",
     "pursuer_target_x",
     "pursuer_target_y",
-    "pursuer_lidar_avoidance_active",
-    "pursuer_lidar_front_distance",
-    "pursuer_lidar_left_distance",
-    "pursuer_lidar_right_distance",
-    "pursuer_lidar_danger_count",
     "pursuer_planner_active",
     "pursuer_planner_path_length",
     "pursuer_planner_replan",
@@ -129,10 +124,7 @@ INFO_TENSORBOARD_KEYS = (
     "movement_reward_total",
     "stability_reward_total",
     "survival_reward_total",
-    "front_blocked_speed_penalty",
-    "front_blocked_drive_penalty",
     "front_blocked_straight_penalty",
-    "front_blocked_brake_reward",
     "obstacle_action_reward",
     "obstacle_action_penalty",
     "obstacle_target_steering",
@@ -359,6 +351,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def start_webots_no_rendering(webots_exe: str | None, world_path: str) -> subprocess.Popen:
+    """Launch a batch Webots process that the external controller can attach to."""
+
     executable = webots_exe or _default_webots_executable()
     command = [
         executable,
@@ -389,6 +383,8 @@ def _default_webots_executable() -> str:
 
 
 def _model_class_from_config(config: dict) -> type[BaseAlgorithm]:
+    """Resolve the configured algorithm to its Stable-Baselines3 class."""
+
     algorithm = model_algorithm_from_config(config).lower()
     if algorithm not in MODEL_ALGORITHMS:
         choices = ", ".join(sorted(MODEL_ALGORITHMS))
@@ -402,6 +398,8 @@ def _configure_training_logger(
     reset_num_timesteps: bool,
     enable_tensorboard: bool,
 ) -> Logger:
+    """Create console output and an optional resumable TensorBoard run."""
+
     output_formats = [HumanOutputFormat(sys.stdout, max_length=72)]
     run_dir: str | None = None
     if enable_tensorboard:
@@ -422,10 +420,14 @@ def _configure_training_logger(
 
 
 def main() -> None:
+    """Build the environment, create or resume a model, and run training."""
+
     args = parse_args()
     config = load_experiment_config(args.config)
     if args.algorithm is not None:
         config.setdefault("model", {})["algorithm"] = args.algorithm
+    # RecurrentPPO uses a different registered policy name even though both
+    # algorithms consume the same dictionary observation.
     if model_algorithm_from_config(config).lower() == "recurrent_ppo":
         model_config = config.setdefault("model", {})
         if str(model_config.get("policy", "MultiInputPolicy")) == "MultiInputPolicy":
@@ -465,6 +467,8 @@ def main() -> None:
         tb_log_name = time.strftime("%Y%m%d-%H%M%S")
         reset_num_timesteps = args.reset_timesteps or args.resume_from is None
         if args.resume_from:
+            # Loading with env= preserves optimizer/model state while binding
+            # the checkpoint to the current Webots environment.
             print(f"Resuming training from: {os.path.abspath(args.resume_from)}")
             model: BaseAlgorithm = model_cls.load(
                 args.resume_from,

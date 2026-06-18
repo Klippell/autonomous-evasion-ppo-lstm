@@ -6,9 +6,7 @@
     "pursuer_random_spawn_min_evader_distance": 35.0,
     "pursuer_random_spawn_obstacle_margin": 8.0,
     "pursuer_limited_info_update_seconds": 10.0,
-    "pursuer_limited_info_direction_noise_degrees": 20.0,
     "pursuer_limited_info_patrol_update_seconds": 2.5,
-    "pursuer_limited_info_patrol_turn_degrees": 35.0,
     "pursuer_line_of_sight_max_distance": 140.0,
     "pursuer_line_of_sight_obstacle_margin": 1.0
   },

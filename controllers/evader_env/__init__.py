@@ -17,6 +17,8 @@ from controllers.evader_env.webots_runtime import DEFAULT_SPAWN_POSES, SpawnPose
 
 @dataclass(frozen=True)
 class ObstacleFootprint:
+    """Geometria do obstaculo nas coordenadas locais do no."""
+
     radius: float
     vertices: tuple[tuple[float, float], ...] = ()
     parts: tuple[tuple[tuple[float, float], ...], ...] = ()
@@ -24,6 +26,8 @@ class ObstacleFootprint:
 
 @dataclass
 class WorldFootprint:
+    """Geometria do obstaculo transformada para o plano XY do mundo."""
+
     center: np.ndarray
     radius: float
     label: str
@@ -32,7 +36,7 @@ class WorldFootprint:
 
 
 class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
-    """Webots Gym environment for training an evader against a simple pursuer."""
+    """Ambiente Gym do Webots para treinar um evasor contra perseguidores."""
 
     metadata = {"render_modes": []}
 
@@ -42,7 +46,6 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         capture_distance: float = 6.0,
         vehicle_touch_distance: float = 5.5,
         touch_collision_lidar_distance: float = 2.0,
-        obstacle_collision_distance: float = 1.25,
         obstacle_collision_lidar_fallback_distance: float = 0.25,
         capture_termination_penalty: float = 150.0,
         obstacle_collision_termination_penalty: float = 350.0,
@@ -73,12 +76,6 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         pursuer_avoid_obstacles: bool = True,
         pursuer_obstacle_margin: float = 2.0,
         pursuer_avoidance_lookahead_steps: float = 5.0,
-        pursuer_lidar_avoidance_enabled: bool = True,
-        pursuer_lidar_range: float = 28.0,
-        pursuer_lidar_danger_distance: float = 14.0,
-        pursuer_lidar_ray_count: int = 15,
-        pursuer_lidar_scan_angle_degrees: float = 180.0,
-        pursuer_lidar_front_angle_degrees: float = 45.0,
         pursuer_avoidance_commit_steps: int = 24,
         pursuer_return_to_chase_steps: int = 18,
         pursuer_avoidance_same_obstacle_distance: float = 10.0,
@@ -94,12 +91,9 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         pursuer_random_spawn_obstacle_margin: float = 8.0,
         pursuer_spawn_wall_margin: float = 6.0,
         pursuer_limited_info_update_seconds: float = 10.0,
-        pursuer_limited_info_direction_noise_degrees: float = 20.0,
         pursuer_limited_info_patrol_update_seconds: float = 2.5,
-        pursuer_limited_info_patrol_turn_degrees: float = 35.0,
         pursuer_line_of_sight_max_distance: float = 260.0,
         pursuer_line_of_sight_obstacle_margin: float = 0.1,
-        pursuer_line_of_sight_grace_steps: int = 120,
         pursuer_planner_enabled: bool = True,
         pursuer_planner_cell_size: float = 8.0,
         pursuer_planner_padding: float = 1.375,
@@ -147,12 +141,13 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         right_camera_names: tuple[str, ...] | list[str] = ("right camera",),
         pursuer_recognition_tokens: tuple[str, ...] | list[str] = ("pursuer", "Pursuer"),
     ) -> None:
+        """Configura espacos da politica, simulacao e parametros de recompensa."""
+
         super().__init__()
         self.max_episode_steps = max_episode_steps
         self.capture_distance = capture_distance
         self.vehicle_touch_distance = vehicle_touch_distance
         self.touch_collision_lidar_distance = max(float(touch_collision_lidar_distance), 0.0)
-        self.obstacle_collision_distance = max(float(obstacle_collision_distance), 0.0)
         self.obstacle_collision_lidar_fallback_distance = max(float(obstacle_collision_lidar_fallback_distance), 0.0)
         self.capture_termination_penalty = max(float(capture_termination_penalty), 0.0)
         self.obstacle_collision_termination_penalty = max(float(obstacle_collision_termination_penalty), 0.0)
@@ -183,12 +178,6 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.pursuer_avoid_obstacles = bool(pursuer_avoid_obstacles)
         self.pursuer_obstacle_margin = max(float(pursuer_obstacle_margin), 0.0)
         self.pursuer_avoidance_lookahead_steps = max(float(pursuer_avoidance_lookahead_steps), 1.0)
-        self.pursuer_lidar_avoidance_enabled = bool(pursuer_lidar_avoidance_enabled)
-        self.pursuer_lidar_range = max(float(pursuer_lidar_range), 1.0)
-        self.pursuer_lidar_danger_distance = max(float(pursuer_lidar_danger_distance), 1.0)
-        self.pursuer_lidar_ray_count = max(int(pursuer_lidar_ray_count), 7)
-        self.pursuer_lidar_scan_angle = math.radians(max(float(pursuer_lidar_scan_angle_degrees), 1.0))
-        self.pursuer_lidar_front_angle = math.radians(max(float(pursuer_lidar_front_angle_degrees), 1.0))
         self.pursuer_avoidance_commit_steps = max(int(pursuer_avoidance_commit_steps), 0)
         self.pursuer_return_to_chase_steps = max(int(pursuer_return_to_chase_steps), 0)
         self.pursuer_avoidance_same_obstacle_distance = max(float(pursuer_avoidance_same_obstacle_distance), 0.0)
@@ -207,12 +196,9 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.pursuer_random_spawn_obstacle_margin = max(float(pursuer_random_spawn_obstacle_margin), 0.0)
         self.pursuer_spawn_wall_margin = max(float(pursuer_spawn_wall_margin), 0.0)
         self.pursuer_limited_info_update_seconds = max(float(pursuer_limited_info_update_seconds), 0.1)
-        self.pursuer_limited_info_direction_noise_degrees = max(float(pursuer_limited_info_direction_noise_degrees), 0.0)
         self.pursuer_limited_info_patrol_update_seconds = max(float(pursuer_limited_info_patrol_update_seconds), 0.1)
-        self.pursuer_limited_info_patrol_turn_degrees = max(float(pursuer_limited_info_patrol_turn_degrees), 0.0)
         self.pursuer_line_of_sight_max_distance = max(float(pursuer_line_of_sight_max_distance), 0.0)
         self.pursuer_line_of_sight_obstacle_margin = max(float(pursuer_line_of_sight_obstacle_margin), 0.0)
-        self.pursuer_line_of_sight_grace_steps = max(int(pursuer_line_of_sight_grace_steps), 0)
         self.pursuer_planner_enabled = bool(pursuer_planner_enabled)
         self.pursuer_planner_cell_size = max(float(pursuer_planner_cell_size), 1.0)
         self.pursuer_planner_padding = max(float(pursuer_planner_padding), 0.0)
@@ -344,11 +330,6 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.pursuer_debug_knows_exact_position = 0.0
         self.pursuer_avoidance_obstacle_center: np.ndarray | None = None
         self.pursuer_avoidance_obstacle_radius = 0.0
-        self.pursuer_lidar_avoidance_active = False
-        self.pursuer_lidar_front_distance = self.pursuer_lidar_range
-        self.pursuer_lidar_left_distance = self.pursuer_lidar_range
-        self.pursuer_lidar_right_distance = self.pursuer_lidar_range
-        self.pursuer_lidar_danger_count = 0
         self.pursuer_planner_active = False
         self.pursuer_planner_path_length = 0
         self.pursuer_planner_replan = False
@@ -384,6 +365,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.spawn_poses = DEFAULT_SPAWN_POSES
 
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None):
+        """Reinicia a simulacao e retorna sensores obtidos em uma pose estavel."""
+
         super().reset(seed=seed)
         self._ensure_webots()
         self.step_count = 0
@@ -422,11 +405,6 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.pursuer_debug_knows_exact_position = 0.0
         self.pursuer_avoidance_obstacle_center = None
         self.pursuer_avoidance_obstacle_radius = 0.0
-        self.pursuer_lidar_avoidance_active = False
-        self.pursuer_lidar_front_distance = self.pursuer_lidar_range
-        self.pursuer_lidar_left_distance = self.pursuer_lidar_range
-        self.pursuer_lidar_right_distance = self.pursuer_lidar_range
-        self.pursuer_lidar_danger_count = 0
         self.pursuer_planner_active = False
         self.pursuer_planner_path_length = 0
         self.pursuer_planner_replan = False
@@ -448,6 +426,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.previous_speed_mps = 0.0
         self.visited_exploration_cells.clear()
 
+        # Os obstaculos sao movidos antes dos perseguidores para que o spawn e o
+        # planejador usem a geometria correta deste episodio.
         pose = self._spawn_pose_for_episode()
         evader_spawn_xy = np.array(pose.evader_xy, dtype=np.float32)
         if self.evader_translation_field is not None:
@@ -475,6 +455,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.driver.setBrakeIntensity(1.0)
         self.driver.setSteeringAngle(0.0)
         self.directional_lidar_ranges = {}
+        # Depois de um teleporte, os sensores do Webots podem conter dados
+        # antigos. Avanca a simulacao antes de criar o historico das recompensas.
         self._step_simulation(self.reset_sensor_warmup_steps)
         obs = self._observation()
 
@@ -490,6 +472,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         return obs, {"distance_to_pursuer": self.previous_distance}
 
     def step(self, action: np.ndarray):
+        """Aplica uma acao e avanca o Webots por ``action_repeat`` passos."""
+
         timing_start = time.perf_counter()
         phase_start = timing_start
         self._ensure_webots()
@@ -504,6 +488,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
             policy_drive_index,
         ) = self._decode_action(action)
         self.raw_action = np.array([steering, drive], dtype=np.float32)
+        # O professor de seguranca opcional altera o comando da politica. As duas
+        # versoes ficam em info para que a intervencao possa ser medida.
         steering, drive, obstacle_safety_active = self._apply_obstacle_safety(steering, drive)
         safety_action = np.array([steering, drive], dtype=np.float32)
         steering_target = steering
@@ -651,11 +637,6 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
             "pursuer_knows_exact_position": float(self.pursuer_debug_knows_exact_position),
             "pursuer_target_x": float(self.pursuer_current_target_xy[0]),
             "pursuer_target_y": float(self.pursuer_current_target_xy[1]),
-            "pursuer_lidar_avoidance_active": float(self.pursuer_lidar_avoidance_active),
-            "pursuer_lidar_front_distance": float(self.pursuer_lidar_front_distance),
-            "pursuer_lidar_left_distance": float(self.pursuer_lidar_left_distance),
-            "pursuer_lidar_right_distance": float(self.pursuer_lidar_right_distance),
-            "pursuer_lidar_danger_count": float(self.pursuer_lidar_danger_count),
             "pursuer_planner_active": float(self.pursuer_planner_active),
             "pursuer_planner_path_length": float(self.pursuer_planner_path_length),
             "pursuer_planner_replan": float(self.pursuer_planner_replan),
@@ -712,6 +693,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
             pass
 
     def _ensure_webots(self) -> None:
+        """Conecta uma vez ao veiculo externo e localiza seus dispositivos."""
+
         if self.driver is not None:
             return
 
@@ -728,6 +711,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.driver = Driver()
         self.timestep = int(self.driver.getBasicTimeStep())
         sensor_timestep = max(int(self.sensor_timestep or self.timestep), self.timestep)
+        # Dispositivos opcionais ausentes nao impedem a inicializacao; sua
+        # ausencia aparece nas observacoes produzidas pelo ambiente.
         self.directional_lidars = {
             "front": self._device_by_name(("front lidar",)),
             "left": self._device_by_name(("left lidar",)),
@@ -1084,6 +1069,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
             placed_xy.append(np.asarray(xy, dtype=np.float32))
 
     def _collect_random_obstacles(self) -> None:
+        """Coleta os DEFs configurados e, opcionalmente, outros edificios."""
+
         self.random_obstacles = []
         seen_node_ids: set[int] = set()
         for def_name in self.random_obstacle_def_names:
@@ -1097,6 +1084,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
             self._collect_random_building_nodes(seen_node_ids)
 
     def _collect_pursuer_obstacles(self) -> None:
+        """Monta a lista de obstaculos usada nas colisoes e no A* do perseguidor."""
+
         self.pursuer_obstacles = []
         self.pursuer_obstacle_cache = []
         seen_node_ids: set[int] = set()
@@ -1157,6 +1146,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         self.pursuer_obstacles.append((node, translation_field, rotation_field, footprint, label))
 
     def _refresh_pursuer_obstacle_cache(self) -> None:
+        """Converte os campos dos obstaculos moveis em geometria no mundo."""
+
         self.pursuer_obstacle_cache = []
         for _node, translation_field, rotation_field, footprint, label in self.pursuer_obstacles:
             try:
@@ -1270,13 +1261,13 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
 
         return f"{type_name or label}:{label}:default"
 
-    @staticmethod
-    def _vertices_cache_key(vertices: tuple[tuple[float, float], ...]) -> str:
-        return ";".join(f"{x:.3f},{y:.3f}" for x, y in vertices)
-
     def _build_obstacle_footprint(self, node: Any, label: str) -> ObstacleFootprint:
+        """Extrai a representacao 2D mais precisa que seja barata de calcular."""
+
         type_name = self._node_type_name(node)
 
+        # Dimensoes exatas e bounding objects tem prioridade. Aproximacoes por
+        # nome sao usadas apenas como ultimo recurso.
         length = self._float_field_value(node, "length")
         width = self._float_field_value(node, "width")
         if length is not None and width is not None:
@@ -1675,10 +1666,13 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         return angle if axis_z >= 0.0 else -angle
 
     def _randomize_obstacle_poses(self) -> None:
+        """Posiciona obstaculos nos limites e fora da area livre do spawn."""
+
         if not self.random_obstacles:
             return
 
         placed: list[WorldFootprint] = []
+        # Edificios maiores sao mais dificeis de encaixar e sao colocados primeiro.
         obstacles = sorted(self.random_obstacles, key=lambda obstacle: obstacle[5].radius, reverse=True)
         for node, translation_field, rotation_field, z, label, footprint in obstacles:
             yaw = float(self.np_random.uniform(-math.pi, math.pi))
@@ -1774,6 +1768,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         footprint: ObstacleFootprint,
         yaw: float,
     ) -> np.ndarray:
+        """Amostra um centro valido e guarda o candidato com maior espaco livre."""
+
         min_x, max_x, min_y, max_y = self.random_obstacle_bounds
         edge_margin = footprint.radius + self.random_obstacle_edge_spacing
         sample_min_x, sample_max_x = self._shrunk_axis_bounds(min_x, max_x, edge_margin)
@@ -1797,6 +1793,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
                 continue
             return xy
 
+        # Mapas densos podem nao ter uma amostra perfeita. O melhor ponto
+        # encontrado evita empilhar todas as falhas no mesmo canto.
         if best_xy is not None:
             return best_xy
         return np.array([sample_min_x, sample_min_y], dtype=np.float32)
@@ -2025,6 +2023,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         return angle if axis_z >= 0.0 else -angle
 
     def _move_pursuer(self) -> None:
+        """Advance every active pursuer using the shared guidance state."""
+
         if not self.pursuer_agents and (self.pursuer_translation_field is None or self.pursuer_rotation_field is None):
             return
         evader_xy = self._evader_xy()
@@ -2040,6 +2040,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
             self._move_single_pursuer(agent, evader_xy)
 
     def _move_single_pursuer(self, agent: dict[str, Any], evader_xy: np.ndarray) -> None:
+        """Choose guidance, planning, and contact recovery for one pursuer."""
+
         translation_field = agent.get("translation_field")
         rotation_field = agent.get("rotation_field")
         if translation_field is None or rotation_field is None:
@@ -2244,6 +2246,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         return np.array([math.cos(heading), math.sin(heading)], dtype=np.float32)
 
     def _pursuer_guidance_unit(self, pursuer_xy: np.ndarray, evader_xy: np.ndarray) -> tuple[np.ndarray | None, bool]:
+        """Return the direction allowed by the current pursuer information mode."""
+
         direct_unit = self._unit_or_none(evader_xy - pursuer_xy)
         if direct_unit is None:
             return None, True
@@ -2256,6 +2260,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
             return direct_unit, True
 
         self.pursuer_line_of_sight = self._pursuer_has_line_of_sight(pursuer_xy, evader_xy)
+        # Line of sight is the only source of continuous exact tracking in the
+        # limited-information experiment.
         if self.pursuer_line_of_sight:
             self.pursuer_last_line_of_sight_step = self.step_count
             self.pursuer_last_known_evader_xy = evader_xy.astype(np.float32).copy()
@@ -2325,6 +2331,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         fallback_unit: np.ndarray,
         step: float,
     ) -> tuple[np.ndarray, np.ndarray] | None:
+        """Follow a cached A* path, replanning only when its target becomes stale."""
+
         self.pursuer_planner_active = False
         self.pursuer_planner_replan = False
         self.pursuer_planner_stuck_recovery = False
@@ -2420,6 +2428,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         return self._pursuer_cell_center(free_cell)
 
     def _rebuild_pursuer_planner_grid(self) -> None:
+        """Rasterize world footprints into the pursuer's occupancy grid."""
+
         min_x, max_x, min_y, max_y = self.random_obstacle_bounds
         padding = self.pursuer_planner_padding + self.pursuer_planner_cell_size
         min_x -= padding
@@ -2449,6 +2459,7 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
                     if self._point_to_world_footprint_distance(center, obstacle) <= self.pursuer_planner_padding:
                         grid[cy, cx] = True
 
+        # Any obstacle movement invalidates every cached waypoint.
         self._clear_pursuer_plan()
 
     def _world_footprint_bounds(self, obstacle: WorldFootprint, padding: float = 0.0) -> tuple[np.ndarray, np.ndarray]:
@@ -2603,6 +2614,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         return None
 
     def _pursuer_astar(self, start: tuple[int, int], goal: tuple[int, int]) -> list[tuple[int, int]]:
+        """Find an eight-connected grid path within the configured search budget."""
+
         if self.pursuer_planner_grid is None:
             return []
         if start == goal:
@@ -2692,18 +2705,6 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         return max(1, int(math.ceil(seconds / step_seconds)))
 
     @staticmethod
-    def _rotate_unit(unit: np.ndarray, angle: float) -> np.ndarray:
-        cos_angle = math.cos(angle)
-        sin_angle = math.sin(angle)
-        return np.array(
-            [
-                float(unit[0]) * cos_angle - float(unit[1]) * sin_angle,
-                float(unit[0]) * sin_angle + float(unit[1]) * cos_angle,
-            ],
-            dtype=np.float32,
-        )
-
-    @staticmethod
     def _point_segment_distance(point: np.ndarray, start: np.ndarray, end: np.ndarray) -> float:
         segment = end - start
         length_squared = float(np.dot(segment, segment))
@@ -2721,13 +2722,10 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         step: float,
         contact_active: bool,
     ) -> tuple[np.ndarray, np.ndarray]:
+        """Select a short collision-free escape direction after contact or blockage."""
+
         self.pursuer_avoidance_active = False
         self.pursuer_avoidance_obstacle_count = 0
-        self.pursuer_lidar_avoidance_active = False
-        self.pursuer_lidar_front_distance = self.pursuer_lidar_range
-        self.pursuer_lidar_left_distance = self.pursuer_lidar_range
-        self.pursuer_lidar_right_distance = self.pursuer_lidar_range
-        self.pursuer_lidar_danger_count = 0
         direct_next = pursuer_xy + direct_unit * step
         if not self.pursuer_avoid_obstacles or not self.pursuer_obstacle_cache:
             return direct_next, direct_unit
@@ -2955,170 +2953,6 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
             return max(0.8, min(self.pursuer_obstacle_margin, self.pursuer_line_of_sight_obstacle_margin))
         return max(self.pursuer_obstacle_margin, 0.2)
 
-    def _pursuer_lidar_avoidance_step(
-        self,
-        pursuer_xy: np.ndarray,
-        evader_xy: np.ndarray,
-        direct_unit: np.ndarray,
-        step: float,
-        margin: float | None = None,
-    ) -> tuple[np.ndarray, np.ndarray] | None:
-        if not self.pursuer_lidar_avoidance_enabled:
-            return None
-
-        scan = self._pursuer_virtual_lidar_scan(pursuer_xy, evader_xy, direct_unit)
-        self.pursuer_lidar_front_distance = float(scan["front_distance"])
-        self.pursuer_lidar_left_distance = float(scan["left_distance"])
-        self.pursuer_lidar_right_distance = float(scan["right_distance"])
-        self.pursuer_lidar_danger_count = int(scan["danger_count"])
-
-        danger_distance = self.pursuer_lidar_danger_distance
-        if scan["front_distance"] >= danger_distance and scan["danger_count"] <= 0:
-            return None
-
-        side = self._pursuer_lidar_avoidance_side(scan)
-        candidate_units = self._pursuer_lidar_candidates(direct_unit, side)
-        best_candidate: tuple[np.ndarray, np.ndarray, float] | None = None
-        for candidate_unit in candidate_units:
-            if candidate_unit is None:
-                continue
-            candidate_xy = pursuer_xy + candidate_unit * step
-            clearance = self._pursuer_virtual_lidar_distance(pursuer_xy, evader_xy, candidate_unit)
-            hit = self._pursuer_path_building_hit(
-                pursuer_xy,
-                pursuer_xy + candidate_unit * self._pursuer_avoidance_lookahead_distance(step),
-                evader_xy,
-                margin=margin,
-            )
-            score = clearance + 2.0 * float(hit is None)
-            if best_candidate is None or score > best_candidate[2]:
-                best_candidate = (candidate_xy, candidate_unit, score)
-            if hit is None and clearance >= danger_distance:
-                self.pursuer_avoidance_active = True
-                self.pursuer_lidar_avoidance_active = True
-                self.pursuer_avoidance_obstacle_count = max(1, int(scan["danger_count"]))
-                self.pursuer_avoidance_side = side
-                self.pursuer_avoidance_commit_until_step = self.step_count + self.pursuer_avoidance_commit_steps
-                return candidate_xy, candidate_unit
-
-        if best_candidate is None:
-            return None
-        self.pursuer_avoidance_active = True
-        self.pursuer_lidar_avoidance_active = True
-        self.pursuer_avoidance_obstacle_count = max(1, int(scan["danger_count"]))
-        self.pursuer_avoidance_side = side
-        self.pursuer_avoidance_commit_until_step = self.step_count + self.pursuer_avoidance_commit_steps
-        return best_candidate[0], best_candidate[1]
-
-    def _pursuer_lidar_avoidance_side(self, scan: dict[str, float]) -> int:
-        if self.pursuer_avoidance_side != 0 and self.step_count <= self.pursuer_avoidance_commit_until_step:
-            return self.pursuer_avoidance_side
-        left_risk = float(scan["left_risk"])
-        right_risk = float(scan["right_risk"])
-        if abs(left_risk - right_risk) < 1e-4:
-            return 1
-        return -1 if left_risk > right_risk else 1
-
-    def _pursuer_lidar_candidates(self, direct_unit: np.ndarray, side: int) -> tuple[np.ndarray | None, ...]:
-        side = 1 if side >= 0 else -1
-        tangent = self._rotate_unit(direct_unit, side * math.pi * 0.5)
-        opposite_tangent = -tangent
-        away = -direct_unit
-        return (
-            self._unit_or_none(tangent),
-            self._unit_or_none(0.75 * tangent + 0.25 * away),
-            self._unit_or_none(0.80 * tangent + 0.20 * direct_unit),
-            self._unit_or_none(0.55 * tangent + 0.45 * direct_unit),
-            self._unit_or_none(away),
-            self._unit_or_none(opposite_tangent),
-            self._unit_or_none(0.75 * opposite_tangent + 0.25 * away),
-        )
-
-    def _pursuer_virtual_lidar_scan(
-        self,
-        pursuer_xy: np.ndarray,
-        evader_xy: np.ndarray,
-        heading_unit: np.ndarray,
-    ) -> dict[str, float]:
-        half_scan = 0.5 * self.pursuer_lidar_scan_angle
-        half_front = 0.5 * self.pursuer_lidar_front_angle
-        ray_count = max(self.pursuer_lidar_ray_count, 7)
-        angles = np.linspace(-half_scan, half_scan, ray_count, dtype=np.float32)
-
-        front_distance = self.pursuer_lidar_range
-        left_distance = self.pursuer_lidar_range
-        right_distance = self.pursuer_lidar_range
-        left_risk = 0.0
-        right_risk = 0.0
-        danger_count = 0
-        for angle in angles:
-            angle_float = float(angle)
-            ray_unit = self._rotate_unit(heading_unit, angle_float)
-            distance = self._pursuer_virtual_lidar_distance(pursuer_xy, evader_xy, ray_unit)
-            risk = max(0.0, (self.pursuer_lidar_danger_distance - distance) / self.pursuer_lidar_danger_distance)
-            if distance < self.pursuer_lidar_danger_distance:
-                danger_count += 1
-            if abs(angle_float) <= half_front:
-                front_distance = min(front_distance, distance)
-            if angle_float > 0.0:
-                left_distance = min(left_distance, distance)
-                left_risk += risk
-            elif angle_float < 0.0:
-                right_distance = min(right_distance, distance)
-                right_risk += risk
-
-        return {
-            "front_distance": float(front_distance),
-            "left_distance": float(left_distance),
-            "right_distance": float(right_distance),
-            "left_risk": float(left_risk),
-            "right_risk": float(right_risk),
-            "danger_count": float(danger_count),
-        }
-
-    def _pursuer_virtual_lidar_distance(
-        self,
-        pursuer_xy: np.ndarray,
-        evader_xy: np.ndarray,
-        ray_unit: np.ndarray,
-    ) -> float:
-        closest = self.pursuer_lidar_range
-        expanded_margin = max(self.pursuer_obstacle_margin, 0.2)
-        for obstacle in self.pursuer_obstacle_cache:
-            if self._point_to_world_footprint_distance(evader_xy, obstacle) <= self.capture_distance:
-                continue
-            distance = self._ray_to_circle_distance(
-                pursuer_xy,
-                ray_unit,
-                obstacle.center,
-                obstacle.radius + expanded_margin,
-                self.pursuer_lidar_range,
-            )
-            closest = min(closest, distance)
-        return float(closest)
-
-    @staticmethod
-    def _ray_to_circle_distance(
-        origin: np.ndarray,
-        unit: np.ndarray,
-        center: np.ndarray,
-        radius: float,
-        max_range: float,
-    ) -> float:
-        offset = center - origin
-        projection = float(np.dot(offset, unit))
-        perpendicular_squared = float(np.dot(offset, offset) - projection * projection)
-        radius_squared = float(radius * radius)
-        if perpendicular_squared > radius_squared:
-            return max_range
-        half_chord = math.sqrt(max(0.0, radius_squared - perpendicular_squared))
-        hit_distance = projection - half_chord
-        if hit_distance < 0.0:
-            hit_distance = projection + half_chord
-        if hit_distance < 0.0 or hit_distance > max_range:
-            return max_range
-        return float(hit_distance)
-
     def _pursuer_candidate_improves_clearance(
         self,
         pursuer_xy: np.ndarray,
@@ -3148,35 +2982,6 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
             return None
         return vector / norm
 
-    def _pursuer_building_hit(
-        self,
-        next_xy: np.ndarray,
-        evader_xy: np.ndarray,
-    ) -> WorldFootprint | None:
-        closest_hit: WorldFootprint | None = None
-        closest_clearance = float("inf")
-        for obstacle in self.pursuer_obstacle_cache:
-            if (
-                self._point_to_world_footprint_distance(
-                    evader_xy,
-                    obstacle,
-                    precise_margin=self.capture_distance,
-                )
-                <= self.capture_distance
-            ):
-                continue
-            clearance = self._point_to_world_footprint_distance(
-                next_xy,
-                obstacle,
-                precise_margin=max(self.pursuer_obstacle_margin, 0.2),
-            )
-            if clearance >= max(self.pursuer_obstacle_margin, 0.2):
-                continue
-            if clearance < closest_clearance:
-                closest_clearance = clearance
-                closest_hit = obstacle
-        return closest_hit
-
     def _pursuer_path_building_hit(
         self,
         start_xy: np.ndarray,
@@ -3204,6 +3009,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         return closest_hit
 
     def _observation(self) -> dict[str, np.ndarray]:
+        """Assemble and normalize the dictionary observation expected by the policy."""
+
         evader_xy = self._evader_xy()
         pursuer_xy = self._pursuer_xy()
         delta = pursuer_xy - evader_xy
@@ -3254,9 +3061,12 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         })
 
     def _lidar_bins(self) -> np.ndarray:
+        """Compress four directional LiDAR images into twelve normalized sectors."""
+
         if self.directional_lidars:
             bins: list[float] = []
             self.directional_lidar_ranges = {}
+            # This order is part of the checkpoint observation contract.
             for direction in ("front", "left", "back", "right"):
                 ranges = self._read_lidar_ranges(self.directional_lidars.get(direction))
                 self.directional_lidar_ranges[direction] = ranges
@@ -3587,6 +3397,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
             return 0.0
 
     def _apply_obstacle_safety(self, steering: float, drive: float) -> tuple[float, float, bool]:
+        """Optionally override unsafe policy commands with a LiDAR-based teacher."""
+
         if not self.obstacle_safety_enabled:
             return steering, drive, False
 
@@ -3613,6 +3425,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         active = corridor_min < slow_distance or front_risk > 0.18
 
         if not active:
+            # Side-only intervention prevents steering into something already
+            # beside the car without taking control on a clear road.
             if left_close and steering < 0.0:
                 return 0.0, min(drive, 0.2), True
             if right_close and steering > 0.0:
@@ -3649,6 +3463,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         return adjusted_steering, adjusted_drive, True
 
     def _stabilize_evader_steering(self, target_steering: float) -> float:
+        """Hold an avoidance turn briefly to prevent left-right policy flicker."""
+
         target_steering = float(np.clip(target_steering, -0.55, 0.55))
         committed_target = target_steering
 
@@ -3704,6 +3520,8 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         return max(0.0, self.pursuer_speed_mps + self.evader_speed_margin_mps)
 
     def _decode_action(self, action: np.ndarray) -> tuple[float, float, float, float, int, int]:
+        """Convert policy output into steering/drive targets and diagnostic indices."""
+
         action_array = np.asarray(action).reshape(-1)
         if self.discrete_actions:
             steering_index = int(np.clip(round(float(action_array[0])), 0, self.steering_targets.size - 1))
@@ -3798,10 +3616,14 @@ class EvaderEnv(RewardMixin, DebugDisplayMixin, gym.Env):
         )
 
     def _has_collision(self, min_lidar: float, obstacle_distance: float | None = None) -> bool:
+        """Combine capture proximity, touch contact, and close-range LiDAR fallback."""
+
         if self._distance(self._evader_xy(), self._pursuer_xy()) <= self.vehicle_touch_distance:
             return True
         if self.step_count <= self.reset_touch_grace_steps:
             return False
+        # The elongated touch body can report noisy contacts; nearby LiDAR
+        # evidence prevents those events from ending an episode incorrectly.
         if self._raw_touch_sensor_contact() and self._touch_sensor_contact_is_plausible(min_lidar):
             return True
         if obstacle_distance is not None and obstacle_distance <= self.obstacle_collision_lidar_fallback_distance:

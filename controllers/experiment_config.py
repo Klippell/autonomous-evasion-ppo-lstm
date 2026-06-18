@@ -20,6 +20,8 @@ def load_experiment_config(path: str | None = None) -> dict[str, Any]:
 
 
 def env_kwargs_from_config(config: dict[str, Any]) -> dict[str, Any]:
+    """Translate config sections into keyword arguments accepted by EvaderEnv."""
+
     kwargs = deepcopy(config.get("env", {}))
     reward_config = deepcopy(config.get("reward", {}))
     if reward_config:
@@ -28,6 +30,8 @@ def env_kwargs_from_config(config: dict[str, Any]) -> dict[str, Any]:
 
 
 def model_kwargs_from_config(config: dict[str, Any]) -> dict[str, Any]:
+    """Return SB3 constructor options, excluding locally handled identifiers."""
+
     kwargs = deepcopy(config.get("model", {}))
     kwargs.pop("algorithm", None)
     kwargs.pop("policy", None)
@@ -50,6 +54,8 @@ def _read_json(path: str) -> dict[str, Any]:
 
 
 def _deep_update(base: dict[str, Any], overrides: dict[str, Any]) -> dict[str, Any]:
+    """Recursively overlay experiment-specific values without mutating defaults."""
+
     merged = deepcopy(base)
     for key, value in overrides.items():
         if isinstance(value, dict) and isinstance(merged.get(key), dict):

@@ -7,7 +7,11 @@ import numpy as np
 
 
 class DebugDisplayMixin:
+    """Render optional supervisor diagnostics without affecting environment state."""
+
     def _draw_reward_label(self, reward: float, info: dict[str, float | bool]) -> None:
+        """Show a compact reward and behavior summary in the Webots viewport."""
+
         if not self.show_reward_display:
             return
 
@@ -22,7 +26,6 @@ class DebugDisplayMixin:
             f"risk {info['front_corridor_risk']:.2f} safe {int(info['obstacle_safety_active'])}/{info['obstacle_safety_action_delta']:.2f} "
             f"eSt {int(info['evader_steering_stabilization_active'])}/{info['evader_steering_stabilization_delta']:.2f}/{int(info['evader_steering_commit_direction'])}/{int(info['evader_steering_commit_steps_left'])} "
             f"pAv {int(info['pursuer_avoidance_active'])}/{int(info['pursuer_avoidance_obstacle_count'])}/{int(info['pursuer_avoidance_side'])}/{int(info['pursuer_avoidance_commit_steps_left'])} "
-            f"pLid {int(info['pursuer_lidar_avoidance_active'])}/{info['pursuer_lidar_front_distance']:.1f}/{info['pursuer_lidar_left_distance']:.1f}/{info['pursuer_lidar_right_distance']:.1f} "
             f"pPlan {int(info['pursuer_planner_active'])}/{int(info['pursuer_planner_path_length'])}/{int(info['pursuer_planner_replan'])}/{int(info['pursuer_planner_stuck_recovery'])} "
             f"pI {int(info['pursuer_info_mode'])}/{int(info['pursuer_line_of_sight'])}/{info['pursuer_hint_age_seconds']:.0f}s | "
             f"turn {info['obstacle_heading_progress']:.2f}/{info['obstacle_heading_goal']:.2f} | "
@@ -30,7 +33,7 @@ class DebugDisplayMixin:
             f"move {info['movement_reward'] + info['still_penalty'] + info['survival_reward'] + info['exploration_reward']:+.2f} | "
             f"cam {info['visual_moving_away_reward']:+.2f} | "
             f"stab {info['stability_reward_total']:+.2f} | "
-            f"obsR {info['obstacle_clearance_delta_reward'] + info['front_obstacle_penalty'] + info['side_obstacle_penalty'] + info['back_obstacle_penalty'] + info['back_approach_penalty'] + info['front_blocked_speed_penalty'] + info['front_blocked_drive_penalty'] + info['front_blocked_straight_penalty'] + info['front_blocked_brake_reward'] + info['obstacle_action_reward'] + info['obstacle_action_penalty'] + info['obstacle_turn_commitment_reward'] + info['obstacle_turn_switch_penalty'] + info['obstacle_turn_progress_reward'] + info['obstacle_wrong_heading_penalty'] + info['obstacle_insufficient_turn_penalty'] + info['avoidance_turn_reward'] + info['over_avoidance_turn_penalty']:+.2f}"
+            f"obsR {info['obstacle_clearance_delta_reward'] + info['front_obstacle_penalty'] + info['side_obstacle_penalty'] + info['back_obstacle_penalty'] + info['back_approach_penalty'] + info['front_blocked_straight_penalty'] + info['obstacle_action_reward'] + info['obstacle_action_penalty'] + info['obstacle_turn_commitment_reward'] + info['obstacle_turn_switch_penalty'] + info['obstacle_turn_progress_reward'] + info['obstacle_wrong_heading_penalty'] + info['obstacle_insufficient_turn_penalty'] + info['avoidance_turn_reward'] + info['over_avoidance_turn_penalty']:+.2f}"
         )
         try:
             self.driver.setLabel(0, text, 0.02, 0.03, 0.08, color, 0.0, "Arial")
@@ -44,6 +47,8 @@ class DebugDisplayMixin:
             self._log_reward_fallback(reward, info)
 
     def _draw_supervisor_minimap(self, info: dict[str, float | bool]) -> None:
+        """Draw world positions and the predicted evader path on the supervisor display."""
+
         if not self.show_reward_display:
             return
 

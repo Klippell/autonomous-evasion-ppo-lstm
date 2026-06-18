@@ -1656,6 +1656,566 @@ DEF RANDOM_BUILDING_29 Solid {
     size 20 30 24
   }
 }
+DEF RANDOM_BUILDING_30 Solid {
+  translation 110.04405912 59.39593556 7
+  rotation 0 0 1 1.007757987847
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.72 0.36 0.26
+        roughness 0.75
+      }
+      geometry Box {
+        size 16 10 14
+      }
+    }
+  ]
+  name "random_building_30"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 16 10 14
+  }
+}
+DEF RANDOM_BUILDING_31 Solid {
+  translation -76.80244852 18.41367004 9
+  rotation 0 0 1 -0.017980749248
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.58 0.58 0.56
+        roughness 0.75
+      }
+      geometry Box {
+        size 18 12 18
+      }
+    }
+  ]
+  name "random_building_31"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 18 12 18
+  }
+}
+DEF RANDOM_BUILDING_32 Solid {
+  translation -149.44728346 51.03773146 8
+  rotation 0 0 1 -2.568190407159
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.54 0.58 0.6
+        roughness 0.75
+      }
+      geometry Box {
+        size 22 12 16
+      }
+    }
+  ]
+  name "random_building_32"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 22 12 16
+  }
+}
+DEF RANDOM_BUILDING_33 Solid {
+  translation 146.53065969 198.77694789 8
+  rotation 0 0 1 -0.393879724756
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.5 0.52 0.54
+        roughness 0.75
+      }
+      geometry Box {
+        size 20 14 16
+      }
+    }
+  ]
+  name "random_building_33"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 20 14 16
+  }
+}
+DEF RANDOM_BUILDING_34 Solid {
+  translation -13.60318501 131.20644590 11
+  rotation 0 0 1 2.137325098125
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.62 0.58 0.54
+        roughness 0.75
+      }
+      geometry Box {
+        size 16 16 22
+      }
+    }
+  ]
+  name "random_building_34"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 16 16 22
+  }
+}
+DEF RANDOM_BUILDING_35 Solid {
+  translation -9.23262742 105.48053807 16
+  rotation 0 0 1 1.101310603234
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.45 0.52 0.6
+        roughness 0.75
+      }
+      geometry Box {
+        size 12 12 32
+      }
+    }
+  ]
+  name "random_building_35"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 12 12 32
+  }
+}
+DEF RANDOM_BUILDING_36 Solid {
+  translation 111.85555795 -70.95498288 14
+  rotation 0 0 1 -0.107046881719
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.4 0.48 0.56
+        roughness 0.75
+      }
+      geometry Box {
+        size 14 14 28
+      }
+    }
+  ]
+  name "random_building_36"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 14 14 28
+  }
+}
+DEF RANDOM_BUILDING_37 Solid {
+  translation 36.89296798 31.95836842 9
+  rotation 0 0 1 -0.298007784066
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.68 0.66 0.62
+        roughness 0.75
+      }
+      geometry Box {
+        size 24 14 18
+      }
+    }
+  ]
+  name "random_building_37"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 24 14 18
+  }
+}
+DEF RANDOM_BUILDING_38 Solid {
+  translation 48.57022744 99.16589453 9
+  rotation 0 0 1 -3.059600068899
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.6 0.6 0.58
+        roughness 0.75
+      }
+      geometry Box {
+        size 14 12 18
+      }
+    }
+  ]
+  name "random_building_38"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 14 12 18
+  }
+}
+DEF RANDOM_BUILDING_39 Solid {
+  translation -6.61483744 250.72267202 2.15
+  rotation 0 0 1 0.843965723794
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.75 0.38 0.28
+        roughness 0.75
+      }
+      geometry Box {
+        size 13 12 4.3
+      }
+    }
+  ]
+  name "random_building_39"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 13 12 4.3
+  }
+}
+DEF RANDOM_BUILDING_40 Solid {
+  translation -81.89144930 -114.63713740 2.15
+  rotation 0 0 1 -0.408743481241
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.75 0.38 0.28
+        roughness 0.75
+      }
+      geometry Box {
+        size 13 12 4.3
+      }
+    }
+  ]
+  name "random_building_40"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 13 12 4.3
+  }
+}
+DEF RANDOM_BUILDING_41 Solid {
+  translation 92.44129747 -122.23084357 13
+  rotation 0 0 1 0.804008043800
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.42 0.5 0.58
+        roughness 0.75
+      }
+      geometry Box {
+        size 12 12 26
+      }
+    }
+  ]
+  name "random_building_41"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 12 12 26
+  }
+}
+DEF RANDOM_BUILDING_42 Solid {
+  translation -7.65149438 -74.42613680 13
+  rotation 0 0 1 2.215617191598
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.42 0.5 0.58
+        roughness 0.75
+      }
+      geometry Box {
+        size 12 12 26
+      }
+    }
+  ]
+  name "random_building_42"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 12 12 26
+  }
+}
+DEF RANDOM_BUILDING_43 Solid {
+  translation -83.14903870 -11.77087135 10
+  rotation 0 0 1 2.165625398243
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.55 0.5 0.46
+        roughness 0.75
+      }
+      geometry Box {
+        size 16 10 20
+      }
+    }
+  ]
+  name "random_building_43"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 16 10 20
+  }
+}
+DEF RANDOM_BUILDING_44 Solid {
+  translation -100.03050385 184.52767304 10
+  rotation 0 0 1 2.322920664174
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.55 0.5 0.46
+        roughness 0.75
+      }
+      geometry Box {
+        size 16 10 20
+      }
+    }
+  ]
+  name "random_building_44"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 16 10 20
+  }
+}
+DEF RANDOM_BUILDING_45 Solid {
+  translation -111.58983801 119.39752779 10
+  rotation 0 0 1 -2.381195550988
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.55 0.5 0.46
+        roughness 0.75
+      }
+      geometry Box {
+        size 16 10 20
+      }
+    }
+  ]
+  name "random_building_45"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 16 10 20
+  }
+}
+DEF RANDOM_BUILDING_46 Solid {
+  translation -20.83273136 68.88700991 10
+  rotation 0 0 1 -2.335380471953
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.55 0.5 0.46
+        roughness 0.75
+      }
+      geometry Box {
+        size 16 10 20
+      }
+    }
+  ]
+  name "random_building_46"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 16 10 20
+  }
+}
+DEF RANDOM_BUILDING_47 Solid {
+  translation -3.17771730 219.53629170 13
+  rotation 0 0 1 0.374020169253
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.42 0.5 0.58
+        roughness 0.75
+      }
+      geometry Box {
+        size 12 12 26
+      }
+    }
+  ]
+  name "random_building_47"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 12 12 26
+  }
+}
+DEF RANDOM_BUILDING_48 Solid {
+  translation -86.67402247 82.46365018 4
+  rotation 0 0 1 -1.091363588248
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.7 0.68 0.62
+        roughness 0.75
+      }
+      geometry Box {
+        size 10 10 8
+      }
+    }
+  ]
+  name "random_building_48"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 10 10 8
+  }
+}
+DEF RANDOM_BUILDING_49 Solid {
+  translation -163.18855297 -63.78603198 4
+  rotation 0 0 1 0.498980598967
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.7 0.68 0.62
+        roughness 0.75
+      }
+      geometry Box {
+        size 10 10 8
+      }
+    }
+  ]
+  name "random_building_49"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 10 10 8
+  }
+}
+DEF RANDOM_BUILDING_50 Solid {
+  translation -153.14161558 -126.23402180 12
+  rotation 0 0 1 0.141143281188
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.48 0.54 0.58
+        roughness 0.75
+      }
+      geometry Box {
+        size 20 30 24
+      }
+    }
+  ]
+  name "random_building_50"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 20 30 24
+  }
+}
+DEF RANDOM_BUILDING_51 Solid {
+  translation -33.66764135 42.22028868 4
+  rotation 0 0 1 1.413467983930
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.6 0.62 0.66
+        roughness 0.75
+      }
+      geometry Box {
+        size 20 20 8
+      }
+    }
+  ]
+  name "random_building_51"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 20 20 8
+  }
+}
+DEF RANDOM_BUILDING_52 Solid {
+  translation 133.81686128 120.55596729 4
+  rotation 0 0 1 3.064632711655
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.62 0.58 0.52
+        roughness 0.75
+      }
+      geometry Box {
+        size 10 10 8
+      }
+    }
+  ]
+  name "random_building_52"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 10 10 8
+  }
+}
+DEF RANDOM_BUILDING_53 Solid {
+  translation -2.05066846 -107.32212921 4
+  rotation 0 0 1 -0.776704558112
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.62 0.58 0.52
+        roughness 0.75
+      }
+      geometry Box {
+        size 10 10 8
+      }
+    }
+  ]
+  name "random_building_53"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 10 10 8
+  }
+}
+DEF RANDOM_BUILDING_54 Solid {
+  translation 94.78481688 -168.55236245 6
+  rotation 0 0 1 -0.866999296848
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.64 0.56 0.5
+        roughness 0.75
+      }
+      geometry Box {
+        size 14 12 12
+      }
+    }
+  ]
+  name "random_building_54"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 14 12 12
+  }
+}
+DEF RANDOM_BUILDING_55 Solid {
+  translation 100.34861144 163.37350092 12
+  rotation 0 0 1 -1.819348834966
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.48 0.54 0.58
+        roughness 0.75
+      }
+      geometry Box {
+        size 20 30 24
+      }
+    }
+  ]
+  name "random_building_55"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 20 30 24
+  }
+}
+DEF RANDOM_BUILDING_56 Solid {
+  translation 51.67621474 66.92856366 12
+  rotation 0 0 1 -1.138577497353
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.48 0.54 0.58
+        roughness 0.75
+      }
+      geometry Box {
+        size 20 30 24
+      }
+    }
+  ]
+  name "random_building_56"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 20 30 24
+  }
+}
+DEF RANDOM_BUILDING_57 Solid {
+  translation -154.13297541 220.12197172 12
+  rotation 0 0 1 -1.842065836704
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.48 0.54 0.58
+        roughness 0.75
+      }
+      geometry Box {
+        size 20 30 24
+      }
+    }
+  ]
+  name "random_building_57"
+  model "KnownBoxBuilding"
+  boundingObject Box {
+    size 20 30 24
+  }
+}
 AdvertisingBoard {
   translation 48.100535 -116.28367 0
   rotation 0 0 1 2.61799

@@ -9,6 +9,8 @@ import numpy as np
 
 @dataclass(frozen=True)
 class RewardWeights:
+    """Typed reward configuration shared by JSON configs and the environment."""
+
     # Pursuer / camera rewards.
     moving_away_positive_weight: float = 4.0
     moving_away_negative_weight: float = 8.0
@@ -39,10 +41,7 @@ class RewardWeights:
     obstacle_collision_free_reward: float = 0.15
     obstacle_approach_penalty_scale: float = 0.15
     front_blocked_movement_scale: float = 0.15
-    front_blocked_speed_penalty_weight: float = 0.0
-    front_blocked_drive_penalty_weight: float = 0.0
     front_blocked_straight_penalty_weight: float = -8.0
-    front_blocked_brake_reward_weight: float = 0.0
     obstacle_risk_escape_reward_min_scale: float = 0.0
     obstacle_action_reward_weight: float = 4.0
     obstacle_action_penalty_weight: float = -14.0
@@ -93,6 +92,8 @@ class RewardWeights:
 
 
 def reward_weights_from_mapping(values: dict[str, object] | RewardWeights | None) -> RewardWeights:
+    """Validate a config mapping before constructing immutable reward weights."""
+
     if values is None:
         return RewardWeights()
     if isinstance(values, RewardWeights):
@@ -105,6 +106,8 @@ def reward_weights_from_mapping(values: dict[str, object] | RewardWeights | None
 
 
 class RewardMixin:
+    """Reward calculation separated from Webots lifecycle and device handling."""
+
     def _reward(
         self,
         distance: float,
@@ -115,6 +118,8 @@ class RewardMixin:
         evader_xy: np.ndarray,
         pursuer_xy: np.ndarray,
     ) -> tuple[float, dict[str, float]]:
+        """Calculate the scalar reward and expose every component for diagnostics."""
+
         w = self.reward_weights
         vision = self._camera_pursuer_observation()
         drive = float(action[1])
@@ -137,6 +142,8 @@ class RewardMixin:
         line_of_sight_reward = self._line_of_sight_reward(vision)
         visual_moving_away_reward = self._visual_moving_away_reward(vision)
         radial_escape_reward, tangential_orbit_penalty = self._radial_escape_reward(evader_xy, pursuer_xy, distance)
+        # Positive escape rewards fade near a frontal obstacle. Penalties remain
+        # intact so driving into danger cannot be profitable overall.
         obstacle_risk_escape_scale = 1.0 - (
             1.0 - w.obstacle_risk_escape_reward_min_scale
         ) * front_corridor_risk
@@ -232,8 +239,6 @@ class RewardMixin:
         speed_mps = speed_kmh / 3.6
         overspeed = max(0.0, speed_mps - self._evader_speed_limit_mps())
         overspeed_penalty = w.overspeed_penalty_weight * overspeed**2
-        front_blocked_speed_penalty = 0.0
-        front_blocked_drive_penalty = 0.0
         required_turn_fraction = min(1.0, abs(w.obstacle_action_required_steering_min) / 0.55)
         missing_turn_fraction = max(0.0, required_turn_fraction - steering_fraction) / max(required_turn_fraction, 1e-6)
         front_blocked_straight_penalty = (
@@ -242,7 +247,6 @@ class RewardMixin:
             * missing_turn_fraction
             * (0.4 + 0.6 * max(0.0, drive))
         )
-        front_blocked_brake_reward = 0.0
         obstacle_safety_intervention_penalty = (
             w.obstacle_safety_intervention_penalty_weight
             * float(getattr(self, "obstacle_safety_action_delta", 0.0))
@@ -256,6 +260,8 @@ class RewardMixin:
                 w.survival_reward_cap,
             )
 
+        # Group totals are logged independently in TensorBoard and debug CSVs.
+        # Keeping each component in exactly one group avoids double counting.
         pursuer_terms = [
             line_of_sight_reward,
             radial_escape_reward,
@@ -274,10 +280,7 @@ class RewardMixin:
             obstacle_collision_free_reward,
             back_approach_penalty,
             obstacle_stall_penalty,
-            front_blocked_speed_penalty,
-            front_blocked_drive_penalty,
             front_blocked_straight_penalty,
-            front_blocked_brake_reward,
             obstacle_action_reward,
             obstacle_action_penalty,
             obstacle_turn_commitment_reward,
@@ -355,10 +358,7 @@ class RewardMixin:
             "back_approach_penalty": float(back_approach_penalty),
             "front_corridor_risk": float(front_corridor_risk),
             "obstacle_risk_escape_scale": float(obstacle_risk_escape_scale),
-            "front_blocked_speed_penalty": float(front_blocked_speed_penalty),
-            "front_blocked_drive_penalty": float(front_blocked_drive_penalty),
             "front_blocked_straight_penalty": float(front_blocked_straight_penalty),
-            "front_blocked_brake_reward": float(front_blocked_brake_reward),
             "obstacle_action_reward": float(obstacle_action_reward),
             "obstacle_action_penalty": float(obstacle_action_penalty),
             "obstacle_target_steering": float(obstacle_target_steering),

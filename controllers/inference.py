@@ -54,10 +54,7 @@ DEBUG_INFO_KEYS = (
     "obstacle_clearance_delta_reward",
     "obstacle_collision_free_reward",
     "back_approach_penalty",
-    "front_blocked_speed_penalty",
-    "front_blocked_drive_penalty",
     "front_blocked_straight_penalty",
-    "front_blocked_brake_reward",
     "obstacle_action_reward",
     "obstacle_action_penalty",
     "obstacle_target_steering",
@@ -151,11 +148,6 @@ DEBUG_INFO_KEYS = (
     "pursuer_knows_exact_position",
     "pursuer_target_x",
     "pursuer_target_y",
-    "pursuer_lidar_avoidance_active",
-    "pursuer_lidar_front_distance",
-    "pursuer_lidar_left_distance",
-    "pursuer_lidar_right_distance",
-    "pursuer_lidar_danger_count",
     "pursuer_planner_active",
     "pursuer_planner_path_length",
     "pursuer_planner_replan",
@@ -323,6 +315,8 @@ class DebugReport:
         truncated: bool,
         info: dict[str, object],
     ) -> None:
+        """Persist one transition and print it when it is periodic or suspicious."""
+
         self.global_step += 1
         self.episode_step += 1
         self.episode_reward += float(reward)
@@ -427,10 +421,6 @@ class DebugReport:
             f"pGuide {float(row['pursuer_guidance_x']):+.2f}/{float(row['pursuer_guidance_y']):+.2f}/"
             f"{int(float(row['pursuer_knows_exact_position']))} "
             f"pTarget {float(row['pursuer_target_x']):+.1f}/{float(row['pursuer_target_y']):+.1f} "
-            f"pLid {int(float(row['pursuer_lidar_avoidance_active']))}/"
-            f"{float(row['pursuer_lidar_front_distance']):.1f}/"
-            f"{float(row['pursuer_lidar_left_distance']):.1f}/"
-            f"{float(row['pursuer_lidar_right_distance']):.1f} "
             f"pPlan {int(float(row['pursuer_planner_active']))}/"
             f"{int(float(row['pursuer_planner_path_length']))}/"
             f"{int(float(row['pursuer_planner_replan']))}/"
@@ -594,6 +584,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def _load_model(path: str, algorithm: str) -> tuple[BaseAlgorithm, str]:
+    """Load an explicitly selected algorithm or probe supported formats."""
+
     if algorithm != "auto":
         return MODEL_ALGORITHMS[algorithm].load(path), algorithm
 
@@ -609,6 +601,8 @@ def _load_model(path: str, algorithm: str) -> tuple[BaseAlgorithm, str]:
 
 
 def _export_planner_map(env: gym.Env, output_dir: str, episode: int, step: int) -> None:
+    """Ask the unwrapped environment for a planner snapshot when supported."""
+
     unwrapped = env.unwrapped
     exporter = getattr(unwrapped, "export_pursuer_planner_map", None)
     if exporter is None:
@@ -623,6 +617,8 @@ def _export_planner_map(env: gym.Env, output_dir: str, episode: int, step: int) 
 
 
 def main() -> None:
+    """Run a checkpoint continuously while preserving recurrent episode state."""
+
     args = parse_args()
     config = load_experiment_config(args.config)
     print(f"Loading model: {os.path.abspath(args.model)}")
@@ -653,6 +649,8 @@ def main() -> None:
         "Evader-v0",
         **env_kwargs,
     )
+    # SB3's error for a mismatched dictionary space is difficult to diagnose;
+    # fail before prediction with both contracts visible.
     if model.observation_space != env.observation_space:
         raise RuntimeError(
             "This checkpoint was trained with a different observation space than the current environment.\n"
@@ -689,6 +687,8 @@ def main() -> None:
         while True:
             current_obs = obs
             if is_recurrent:
+                # Recurrent policies must receive both hidden state and the
+                # episode boundary mask on every prediction.
                 action, lstm_states = model.predict(
                     current_obs,
                     state=lstm_states,

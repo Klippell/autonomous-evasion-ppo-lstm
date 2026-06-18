@@ -180,10 +180,46 @@ def main():
             u.force_center_spawn = False
 
         obs, _info = env.reset(seed=args.seed + ep)
+
+        # impoe a faixa de distancia [min, max] do perseguidor ao evader
+        if args.random_spawn:
+            try:
+                ev = np.asarray(u._evader_xy()[:2], dtype=np.float64)
+                pu = np.asarray(u._pursuer_xy()[:2], dtype=np.float64)
+                d = float(np.linalg.norm(pu - ev))
+                lo = float(args.min_pursuer_distance)
+                hi = float(args.max_pursuer_distance)
+                if (d > hi or d < lo) and u.pursuer_translation_field is not None:
+                    direction = (pu - ev) / (d + 1e-9)
+                    target = None
+                    for dist_try in (hi, hi - 0.25*(hi-lo), 0.5*(lo+hi), lo + 0.25*(hi-lo), lo):
+                        if dist_try < lo - 1e-6:
+                            continue
+                        cand = ev + direction * dist_try
+                        try:
+                            ok = u._pursuer_spawn_clearance(cand.astype(np.float32)) >= 4.0
+                        except Exception:
+                            ok = True
+                        if ok:
+                            target = cand
+                            break
+                    if target is None:
+                        target = ev + direction * hi
+                    z = u.pursuer_translation_field.getSFVec3f()[2]
+                    u.pursuer_translation_field.setSFVec3f([float(target[0]), float(target[1]), float(z)])
+                    if getattr(u, 'pursuer_node', None) is not None:
+                        u.pursuer_node.resetPhysics()
+                    try:
+                        u.previous_distance = float(np.linalg.norm(np.asarray(u._pursuer_xy()[:2]) - ev))
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+
         lstm_states = None
         episode_starts = np.ones((1,), dtype=bool)
 
-        steps = visible_steps = los_breaks = 0
+        steps = visible_steps = los_breaks = re_detections = 0
         dist_sum = 0.0
         prev_visible = None
         captured = collision = False
@@ -212,6 +248,8 @@ def main():
                 visible_steps += 1
             if prev_visible is not None and prev_visible and not visible:
                 los_breaks += 1
+            if prev_visible is not None and (not prev_visible) and visible:
+                re_detections += 1
             prev_visible = visible
 
             episode_starts = np.array([terminated or truncated], dtype=bool)
@@ -230,9 +268,10 @@ def main():
             "mean_pursuer_distance": round(dist_sum / steps, 2) if steps else 0.0,
             "hidden_ratio": round(1.0 - visible_steps / steps, 3) if steps else 0.0,
             "los_breaks": los_breaks,
+            "re_detections": re_detections,
         })
         outcome = "SUCESSO" if success else ("CAPTURA" if captured else "COLISAO")
-        print(f"ep {ep:3d} | passos={steps:5d} | {outcome:8s} | dist={rows[-1]['mean_pursuer_distance']:6.1f}m | escondido={rows[-1]['hidden_ratio']*100:4.1f}% | LOSbreaks={los_breaks}")
+        print(f"ep {ep:3d} | passos={steps:5d} | {outcome:8s} | dist={rows[-1]['mean_pursuer_distance']:6.1f}m | escondido={rows[-1]['hidden_ratio']*100:4.1f}% | LOSbreaks={los_breaks} | redetect={re_detections}")
 
     env.close()
 
@@ -249,6 +288,7 @@ def main():
     print(f"  Mean pursuer distance         : {col('mean_pursuer_distance').mean():.1f} m")
     print(f"  Hidden ratio                  : {100*col('hidden_ratio').mean():.1f} %")
     print(f"  Line-of-sight breaks (per ep) : {col('los_breaks').mean():.2f}")
+    print(f"  Re-detection freq (per ep)    : {col('re_detections').mean():.2f}")
     print("=" * 64)
 
     csv_path = args.csv
